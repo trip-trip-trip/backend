@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:devdb;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate.ddl-auto: update
+
+server:
+  port: 8080
+
+# dev/test 전용 옵션 예시
+app:
+  dev-header-auth: true
+
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: TRACE
+

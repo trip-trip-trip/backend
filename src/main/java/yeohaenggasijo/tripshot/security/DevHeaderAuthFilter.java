@@ -31,6 +31,7 @@ public class DevHeaderAuthFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }
+        chain.doFilter(req, res);
     }
 
 }
