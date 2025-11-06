@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Profile;
 import yeohaenggasijo.tripshot.domain.user.User;
 import yeohaenggasijo.tripshot.repository.UserRepository;
 
-@Profile({"dev", "test"})
+@Profile({"test"})
 @Configuration
 @RequiredArgsConstructor
 public class DevSeedRunner {

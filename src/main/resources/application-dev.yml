@@ -1,14 +1,6 @@
-sns:
-  google:
-    url: https://accounts.google.com/o/oauth2/v2/auth
-    client:
-      id: 99221206305-3hv46i66gmo27oug2uno8mn7qh9v80fh.apps.googleusercontent.com
-      secret: ${GOOGLE_CLIENT_SECRET}
-    callback:
-      url: http://localhost:8080/login/google
-    token:
-      url: https://oauth2.googleapis.com/token
 spring:
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     url: jdbc:h2:mem:devdb;MODE=PostgreSQL
     driver-class-name: org.h2.Driver
@@ -31,6 +23,16 @@ logging:
     org.springframework.web.servlet.DispatcherServlet: DEBUG
     org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: TRACE
 
+sns:
+  google:
+    url: https://accounts.google.com/o/oauth2/v2/auth
+    client:
+      id: 99221206305-3hv46i66gmo27oug2uno8mn7qh9v80fh.apps.googleusercontent.com
+      secret: ${GOOGLE_CLIENT_SECRET}
+    callback:
+      url: http://localhost:8080/login/google
+    token:
+      url: https://oauth2.googleapis.com/token
 
   kakao:
     url: https://kauth.kakao.com/oauth/authorize
