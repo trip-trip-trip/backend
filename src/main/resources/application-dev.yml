@@ -1,3 +1,13 @@
+sns:
+  google:
+    url: https://accounts.google.com/o/oauth2/v2/auth
+    client:
+      id: 99221206305-3hv46i66gmo27oug2uno8mn7qh9v80fh.apps.googleusercontent.com
+      secret: ${GOOGLE_CLIENT_SECRET}
+    callback:
+      url: http://localhost:8080/login/google
+    token:
+      url: https://oauth2.googleapis.com/token
 spring:
   datasource:
     url: jdbc:h2:mem:devdb;MODE=PostgreSQL
@@ -21,3 +31,23 @@ logging:
     org.springframework.web.servlet.DispatcherServlet: DEBUG
     org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: TRACE
 
+
+  kakao:
+    url: https://kauth.kakao.com/oauth/authorize
+    client:
+      id: e7680efe3200964b658d4f23796af5a6
+      secret: ${KAKAO_CLIENT_SECRET}
+    callback:
+      url: http://localhost:8080/login/kakao
+    token:
+      url: https://kauth.kakao.com/oauth/token
+
+  naver:
+    url: https://nid.naver.com/oauth2.0/authorize
+    client:
+      id: nUZ4CJJSLTxiMP53ZKid
+      secret: ${NAVER_CLIENT_SECRET}
+    callback:
+      url: http://localhost:8080/login/naver
+    token:
+      url: https://nid.naver.com/oauth2.0/token

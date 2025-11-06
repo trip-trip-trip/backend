@@ -30,4 +30,5 @@ public class User extends BaseEntity {
 
   @Column(columnDefinition = "TEXT")
   private String avatarUrl;
+
 }
