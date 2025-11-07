@@ -44,7 +44,7 @@ dependencies {
 }
 
 bootJar {
-	archiveFileName = 'app.jar'
+	archiveFileName = 'app_.jar'
 }
 
 tasks.named('test') {
