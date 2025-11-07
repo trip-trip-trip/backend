@@ -2,12 +2,17 @@ spring:
   config:
     import: optional:file:.env[.properties]
   datasource:
-    url: jdbc:h2:mem:devdb;MODE=PostgreSQL
+    url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
     username: sa
     password:
   jpa:
     hibernate.ddl-auto: update
+  h2:
+    console:
+      enabled: true
+  security:
+    debug: true  # 필터 체인 디버그 프린트 (dev에서만 추천)
 
 server:
   port: 8080
@@ -19,6 +24,8 @@ app:
 
 logging:
   level:
+    org.springframework.security: TRACE
+    org.springframework.security.web.FilterChainProxy: TRACE
     org.springframework.web: DEBUG
     org.springframework.web.servlet.DispatcherServlet: DEBUG
     org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: TRACE
@@ -53,3 +60,6 @@ sns:
       url: http://localhost:8080/login/naver
     token:
       url: https://nid.naver.com/oauth2.0/token
+
+jwt:
+  secret: ${JWT_SECRET}

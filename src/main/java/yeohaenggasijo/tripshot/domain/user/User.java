@@ -19,10 +19,10 @@ public class User extends BaseEntity {
   @Column(length = 30, nullable = false)
   private String username;
 
-  @Column(length = 120, nullable = false)
+  @Column(length = 120)
   private String email;
 
-  @Column(length = 255, nullable = false)
+  @Column(length = 255)
   private String passwordHash;
 
   @Column(length = 160)
@@ -30,5 +30,8 @@ public class User extends BaseEntity {
 
   @Column(columnDefinition = "TEXT")
   private String avatarUrl;
+
+  @Column
+  private String mobile;
 
 }

@@ -3,12 +3,14 @@ package yeohaenggasijo.tripshot.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import yeohaenggasijo.tripshot.dto.login.res.TokenRes;
+import yeohaenggasijo.tripshot.dto.login.res.TryLoginRes;
 import yeohaenggasijo.tripshot.dto.trip.res.SocialAccountInfo;
 import yeohaenggasijo.tripshot.helper.constants.SocialLoginType;
+import yeohaenggasijo.tripshot.repository.SocialAccountRepository;
 import yeohaenggasijo.tripshot.service.social.SocialOauth;
 
 import java.io.BufferedReader;
@@ -26,13 +28,17 @@ import com.google.gson.JsonParser;
 public class OauthService {
     private final List<SocialOauth> socialOauthList;
     private static final Logger logger = LoggerFactory.getLogger(OauthService.class);
+    private final SocialAccountRepository socialAccountRepository;
+    private final LoginService loginService;
 
-    public OauthService(List<SocialOauth> socialOauthList) {
+    public OauthService(List<SocialOauth> socialOauthList, SocialAccountRepository socialAccountRepository, LoginService loginService) {
         this.socialOauthList = socialOauthList;
         logger.info("[OauthService] 주입된 SocialOauth 개수: {}", socialOauthList.size());
         socialOauthList.forEach(oauth ->
                 logger.info("[OauthService] 등록된 OAuth: {}", oauth.getClass().getSimpleName())
         );
+        this.socialAccountRepository = socialAccountRepository;
+        this.loginService = loginService;
     }
 
     // 소셜 로그인 요청 URL을 반환
@@ -68,7 +74,7 @@ public class OauthService {
         }
     }
 
-    public SocialAccountInfo getParsedSocialAccountInfo(SocialLoginType socialLoginType, String code) {
+    public TokenRes getParsedSocialAccountInfo(SocialLoginType socialLoginType, String code) {
         logger.info("[OauthService] 소셜 타입: {}로 사용자 정보 파싱 시작.", socialLoginType.name());
 
         // 엑세스 토큰을 포함한 JSON 응답 요청
@@ -87,7 +93,7 @@ public class OauthService {
 
         SocialAccountInfo socialAccountInfo = parseSocialInfo(socialInfo, socialLoginType, accessToken);
 
-        return socialAccountInfo; //여기 어떻게 할지 다시 보기
+        return loginService.tryLogin(socialAccountInfo);
     }
 
     private String getSocialInfo(SocialLoginType socialLoginType, String accessToken) {
