@@ -109,9 +109,6 @@ jobs:
             chmod 600 /srv/app/tripshot/config/.env
             
             # 최신 JAR를 app.jar로 통일하고 서비스 재시작
-            JAR_SRC=$(ls -t /srv/app/tripshot/*.jar | head -n1)
-            mv -f "$JAR_SRC" /srv/app/tripshot/app.jar
-            chown devadmin:devadmin /srv/app/tripshot/app.jar
             sudo systemctl daemon-reload
             sudo systemctl restart tripshot.service
             sleep 2
