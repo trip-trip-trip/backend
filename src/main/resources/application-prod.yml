@@ -1,0 +1,85 @@
+spring:
+  config:
+    import: optional:file:/srv/app/tripshot/config/.env[.properties]  # 서버 .env 로 환경변수 주입
+  datasource:
+    url: ${DB_URL}                   # 예: jdbc:postgresql://127.0.0.1:5432/tripshot
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update               # 첫 배포는 update, 이후 validate 권장
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  h2:
+    console:
+      enabled: false                 # prod에서는 콘솔 비활성화
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
+
+server:
+  port: 3769
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: INFO
+  file:
+    name: /srv/app/tripshot/logs/app.log   # logback-spring.xml 있으면 여긴 무시됨
+
+# 애플리케이션 옵션
+app:
+  dev-header-auth: false
+
+# CORS 필요 시(프론트 도메인 지정)
+# app:
+#   cors:
+#     allowed-origins: "https://www.your-frontend.com"
+
+jwt:
+  secret: ${JWT_SECRET}
+
+sns:
+  google:
+    url: https://accounts.google.com/o/oauth2/v2/auth
+    client:
+      id: 99221206305-3hv46i66gmo27oug2uno8mn7qh9v80fh.apps.googleusercontent.com
+      secret: ${GOOGLE_CLIENT_SECRET}
+    callback:
+      url: https://YOUR_API_DOMAIN/login/google
+    token:
+      url: https://oauth2.googleapis.com/token
+
+  kakao:
+    url: https://kauth.kakao.com/oauth/authorize
+    client:
+      id: e7680efe3200964b658d4f23796af5a6
+      secret: ${KAKAO_CLIENT_SECRET}
+    callback:
+      url: https://YOUR_API_DOMAIN/login/kakao
+    token:
+      url: https://kauth.kakao.com/oauth/token
+
+  naver:
+    url: https://nid.naver.com/oauth2.0/authorize
+    client:
+      id: nUZ4CJJSLTxiMP53ZKid
+      secret: ${NAVER_CLIENT_SECRET}
+    callback:
+      url: https://YOUR_API_DOMAIN/login/naver
+    token:
+      url: https://nid.naver.com/oauth2.0/token
