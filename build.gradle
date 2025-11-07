@@ -27,6 +27,7 @@ dependencies {
 	runtimeOnly 'com.h2database:h2'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	runtimeOnly 'org.postgresql:postgresql'
 
 	compileOnly 'org.projectlombok:lombok:1.18.28'
 	annotationProcessor 'org.projectlombok:lombok:1.18.28'
@@ -40,6 +41,10 @@ dependencies {
 	runtimeOnly   'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
 
+}
+
+bootJar {
+	archiveFileName = 'app.jar'
 }
 
 tasks.named('test') {
