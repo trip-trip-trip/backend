@@ -38,7 +38,7 @@ public class Trip extends BaseEntity {
   private LocalDate startDate;
   private LocalDate endDate;
 
-  @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "place_id")
+  @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "place_id", nullable = false)
   private Place place;
 
   @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "cover_media_id")

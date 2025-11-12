@@ -29,6 +29,9 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	runtimeOnly 'org.postgresql:postgresql'
 
+	// FCM 의존성
+	implementation 'com.google.firebase:firebase-admin:9.3.0'
+
 	// Querydsl JPA 의존성 (런타임에 사용)
 	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
 
