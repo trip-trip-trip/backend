@@ -63,3 +63,9 @@ sns:
 
 jwt:
   secret: ${JWT_SECRET}
+
+webpush:
+  vapid:
+    public-key: BK_oPAuy3CstCV6Q_SmhQIJ97xy6TPSEyNm9WqAXwsr7HK6He0lA7XG7H0FpcN0QuZNWSlRocen7Nf6XE9BR0_Y
+    private-key: zbK3brHdkB70VQsTJmpUYgMbQQYtU_n_9tJZfUklGcA
+    subject: mailto:shw030507@naver.com

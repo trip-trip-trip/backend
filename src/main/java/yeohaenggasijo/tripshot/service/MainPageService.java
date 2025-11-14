@@ -76,7 +76,7 @@ public class MainPageService {
         List<MediaRes> mediaResList = postMapper.toMediaResList(savedPostMedias, assetMap);
 
         // PostMapper를 사용하여 PostRes DTO 생성 및 반환
-        // 게시글 생성 직후에는 좋아요와 댓글이 없으므로 0, false를 전달합니다.
+        // 게시글 생성 직후에는 좋아요와 댓글이 없으므로 0, false를 전달
         return postMapper.toPostRes(
                 savedPost,
                 authorRes,
@@ -85,23 +85,6 @@ public class MainPageService {
                 0,          // commentCount
                 false       // isLiked
         );
-
-//        // 생성 직후 미디어 목록을 DTO로 변환
-//        List<MediaRes> mediaResList = postMapper.toMediaResListForCreation(req.getMedia());
-//        // 응답 STO 생성 및 반환
-//        // Mapper 사용해 PostRes DTO 생성
-//        return PostRes.builder()
-//                .id(savedPost.getId())
-//                .author(authorRes)
-//                .caption(savedPost.getCaption())
-//                .tripId(savedPost.getTrip().getId())
-//                .visibility(savedPost.getVisibility().name())
-//                .likeCount(0)
-//                .commentCount(0)
-//                .isLiked(false)
-//                .media(mediaResList)
-//                .createdAt(savedPost.getCreatedAt())
-//                .build();
     }
 
     @Transactional
@@ -117,7 +100,6 @@ public class MainPageService {
         }
 
         // Post 엔티티 본문 수정
-        // Post 엔티티에 update(caption, visibility) 메서드가 정의되어야 합니다.
         post.update(
                 req.getCaption(),
                 req.getVisibility()
@@ -141,7 +123,6 @@ public class MainPageService {
 
         // 응답 DTO 생성 (수정 후이므로 통계 값 재계산 또는 0으로 반환)
         // 수정 후의 응답이므로, PostRes를 반환
-        // 좋아요/댓글 수는 0으로 임시 설정하거나, 간단한 쿼리로 조회해야 합니다.
         AuthorRes authorRes = postMapper.toAuthorRes(post.getAuthor());
         List<MediaRes> mediaResList = postMapper.toMediaResListForCreation(req.getMedia());
 
