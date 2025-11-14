@@ -29,8 +29,11 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	runtimeOnly 'org.postgresql:postgresql'
 
-	// FCM 의존성
-	implementation 'com.google.firebase:firebase-admin:9.3.0'
+	// Web Push API
+	implementation group: 'nl.martijndwars', name: 'web-push', version: '5.1.1'
+
+	// Web Push API가 사용하는 VAPID Key를 암호화 라이브러리
+	implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.70'
 
 	// Querydsl JPA 의존성 (런타임에 사용)
 	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
