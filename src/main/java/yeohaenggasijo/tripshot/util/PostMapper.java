@@ -23,7 +23,8 @@ public class PostMapper {
             List<MediaRes> mediaList,
             int likeCount,
             int commentCount,
-            boolean isLiked
+            boolean isLiked,
+            boolean isMe
     ){
       // 모든 인자를 받아서 PostRes DTO를 생성하는 로직
       return PostRes.builder()
@@ -37,6 +38,7 @@ public class PostMapper {
               .likeCount(likeCount)
               .commentCount(commentCount)
               .isLiked(isLiked)
+              .isMe(isMe)
               .media(mediaList)
               // BaseEntity에서 상속받은 필드
               .createdAt(post.getCreatedAt())

@@ -83,7 +83,8 @@ public class MainPageService {
                 mediaResList,
                 0,          // likeCount
                 0,          // commentCount
-                false       // isLiked
+                false,       // isLiked
+                true        // isMe
         );
     }
 
@@ -322,7 +323,8 @@ public class MainPageService {
                             mediaList,
                             likeCounts.getOrDefault(post.getId(), 0),
                             commentCounts.getOrDefault(post.getId(), 0),
-                            likedPostIds.contains(post.getId())
+                            likedPostIds.contains(post.getId()),
+                            post.getAuthor().getId().equals(currentUserId)
                     );
                 })
                 .collect(Collectors.toList());

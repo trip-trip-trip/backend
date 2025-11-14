@@ -33,6 +33,9 @@ public class PostRes {
     @JsonProperty("is_liked")
     private final boolean isLiked;
 
+    @JsonProperty("is_me")
+    private final boolean isMe;
+
     private List<MediaRes> media;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
