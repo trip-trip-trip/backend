@@ -30,4 +30,6 @@ public class PushDevice extends BaseEntity {
 
   private Boolean isActive;
   private LocalDateTime lastSeenAt;
+
+
 }

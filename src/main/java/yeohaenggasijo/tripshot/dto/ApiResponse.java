@@ -1,10 +1,10 @@
 package yeohaenggasijo.tripshot.dto;
 
 public record ApiResponse<T>(
-    boolean success,
+    boolean isSuccess,
     int code,
     String message,
-    T data
+    T result
 ) {
 
     public static <T> ApiResponse<T> ok(T data) {
@@ -19,7 +19,10 @@ public record ApiResponse<T>(
     public static <T> ApiResponse<T> of(boolean success, int code, String message, T data) {
         return new ApiResponse<>(success, code, message, data);
     }
-    public static ApiResponse<Void> error(int code, String message) {
+    public static <T> ApiResponse<T> error(int code, String message) {
         return new ApiResponse<>(false, code, message, null);
+    }
+    public static ApiResponse<Void> ok() {
+        return new ApiResponse<>(true, 200, "OK", null);
     }
 }

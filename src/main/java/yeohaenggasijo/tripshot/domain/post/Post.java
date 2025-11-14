@@ -2,11 +2,13 @@ package yeohaenggasijo.tripshot.domain.post;
 
 import yeohaenggasijo.tripshot.domain.base.BaseEntity;
 import yeohaenggasijo.tripshot.domain.common.PostVisibility;
+import yeohaenggasijo.tripshot.domain.place.Place;
 import yeohaenggasijo.tripshot.domain.trip.Trip;
 import yeohaenggasijo.tripshot.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
-import java.math.BigDecimal;
+
+import java.time.LocalDateTime;
 
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
@@ -29,9 +31,19 @@ public class Post extends BaseEntity {
   @Column(length = 10, nullable = false)
   private PostVisibility visibility;
 
-  @Column(precision = 10, scale = 7)
-  private BigDecimal lat;
+  @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "place_id", nullable = false)
+  private Place place;
 
-  @Column(precision = 10, scale = 7)
-  private BigDecimal lng;
+  public void update(String caption, String visibility) {
+    // 캡션 업데이트
+    if (caption != null) {
+      this.caption = caption;
+    }
+
+    // 공개 범위 업데이트 (String을 Enum으로 변환)
+    if (visibility != null) {
+      this.visibility = PostVisibility.valueOf(visibility.toUpperCase());
+    }
+    this.updatedAt = LocalDateTime.now();
+  }
 }
