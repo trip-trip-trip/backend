@@ -35,6 +35,10 @@ dependencies {
 	// Web Push API가 사용하는 VAPID Key를 암호화 라이브러리
 	implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.70'
 
+	// R2 storage
+	implementation("software.amazon.awssdk:s3:2.25.+")
+	implementation("software.amazon.awssdk:url-connection-client:2.25.+")
+
 	// Querydsl JPA 의존성 (런타임에 사용)
 	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
 
