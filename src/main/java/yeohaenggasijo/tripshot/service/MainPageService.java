@@ -60,7 +60,6 @@ public class MainPageService {
                     .build();
             PostMedia savedPostMedia = postMediaRepository.save(postMedia);
             savedPostMedias.add(savedPostMedia);
-//            postMediaRepository.save(postMedia);
         }
 
         //미디어 에셋 정보 조회
@@ -110,7 +109,7 @@ public class MainPageService {
         // 기존 PostMedia 기록 모두 삭제
         postMediaRepository.deleteAllByPostId(postId);
 
-        // 3-2. 새로운 PostMedia 목록 저장 (createPost와 동일한 로직)
+        // 새로운 PostMedia 목록 저장 (createPost와 동일한 로직)
         int position = 1;
         for (MediaAttachmentReq mediaReq : req.getMedia()) {
             PostMedia postMedia = PostMedia.builder()
@@ -163,12 +162,12 @@ public class MainPageService {
         Optional<Like> existingLike = postLikeRepository.findByPostIdAndUserId(postId, currentUserId);
 
         if (existingLike.isPresent()) {
-            // 3. 기록이 존재하면 (이미 좋아요 상태) -> 삭제 (좋아요 취소)
+            // 기록이 존재하면 (이미 좋아요 상태) -> 삭제 (좋아요 취소)
             postLikeRepository.delete(existingLike.get());
             return false;
 
         } else {
-            // 4. 기록이 없으면 -> 생성 (좋아요 추가)
+            // 기록이 없으면 -> 생성 (좋아요 추가)
             Like newLike = Like.builder()
                     .post(post)
                     .user(user)
@@ -203,7 +202,7 @@ public class MainPageService {
     @Transactional
     public void deleteComment(Long postId, Long commentId, Long currentUserId) {
 
-        // 1. 댓글  조회 및 권한 확인
+        // 댓글  조회 및 권한 확인
         Comment comment = commentRepository.findByPostIdAndId(postId, commentId)
                 .orElseThrow(() -> new NoSuchElementException("댓글을 찾을 수 없습니다. [post ID:" + postId + "] [comment ID:" + commentId + "]"));
 
@@ -223,16 +222,70 @@ public class MainPageService {
 
         List<Comment> comments = commentRepository.findByPostIdWithCommenter(postId);
 
-        // 3. Comment 엔티티 리스트를 CommentRes DTO 리스트로 변환
+        // Comment 엔티티 리스트를 CommentRes DTO 리스트로 변환
         List<CommentRes> commentResList = comments.stream()
                 // CommentRes DTO의 엔티티를 받는 생성자를 활용 (2번에서 가정한 방식)
                 .map(CommentRes::new)
                 .collect(Collectors.toList());
 
-        // 4. CommentListRes로 감싸서 반환
+        // CommentListRes로 감싸서 반환
         return CommentListRes.builder()
                 .comments(commentResList)
                 .build();
+    }
+
+    @Transactional
+    public PostRes getPost(Long postId, Long currentUserId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new NoSuchElementException("게시글을 찾을 수 없습니다. [ID:" + postId + "]"));
+
+        // 접근 권한 확인
+        if (!canAccessPost(post, currentUserId)) {
+            throw new IllegalStateException("게시글에 접근할 수 없습니다.");
+        }
+
+        // 좋아요 수 조회
+        int likeCount = postLikeRepository.findLikeCountsByPostIds(List.of(postId))
+                .getOrDefault(postId, 0);
+
+        // 댓글 수 조회
+        int commentCount = commentRepository.findCommentCountsByPostIds(List.of(postId))
+                .getOrDefault(postId, 0);
+
+        // 현재 유저의 좋아요 여부 확인
+        boolean isLiked = false;
+        if (currentUserId != null) {
+            isLiked = postLikeRepository.findLikedPostIdsByUserIdAndPostIds(currentUserId, List.of(postId))
+                    .contains(postId);
+        }
+
+        // 미디어 정보 조회
+        List<PostMedia> postMediaList = postMediaRepository.findByPostIdIn(List.of(postId));
+        Set<Long> assetIds = postMediaList.stream()
+                .map(PostMedia::getObjectId)
+                .collect(Collectors.toSet());
+        List<MediaAsset> mediaAssetList = mediaAssetRepository.findMediaAssetDetailByIdIn(assetIds);
+
+        Map<Long, MediaAsset> assetMap = mediaAssetList.stream()
+                .collect(Collectors.toMap(MediaAsset::getId, asset -> asset));
+
+        // 작성자 정보 변환
+        AuthorRes authorRes = postMapper.toAuthorRes(post.getAuthor());
+
+        // 미디어 정보 변환
+        List<MediaRes> mediaResList = postMapper.toMediaResList(postMediaList, assetMap);
+
+        // PostRes DTO 생성 및 반환
+        return postMapper.toPostRes(
+                post,
+                authorRes,
+                mediaResList,
+                likeCount,
+                commentCount,
+                isLiked,
+                currentUserId != null && post.getAuthor().getId().equals(currentUserId)
+        );
+
     }
 
     @Transactional
@@ -255,7 +308,7 @@ public class MainPageService {
     @Transactional
     public AllPostListRes getPostFeed(String feedType, Long targetUserId, LocalDateTime cursor, int limit, Long currentUserId) {
 
-        // 1. Repository 호출: 다음 페이지 확인을 위해 limit + 1 요청
+        // Repository 호출: 다음 페이지 확인을 위해 limit + 1 요청
         List<Post> fetchedPosts = postRepository.findPostListWithFilteringAndCursor(
                 feedType,
                 targetUserId,
@@ -263,16 +316,16 @@ public class MainPageService {
                 limit + 1
         );
 
-        // 2. 접근 제어 (Visibility) 필터링 (Repository에서 처리되지 않은 경우 Service에서 처리)
-        List<Post> accessPosts = filterPostsByVisibility(fetchedPosts, targetUserId, currentUserId);
+        // 접근 제어 (Visibility) 필터링 (Repository에서 처리되지 않은 경우 Service에서 처리)
+        List<Post> accessPosts = filterPostsByVisibility(fetchedPosts, currentUserId);
 
-        // 3. 페이지네이션 처리
+        // 페이지네이션 처리
         // 필터링 후 limit + 1개를 초과하는지 확인해야 하지만, 성능을 위해 간단히 구현합니다.
         // (실제로는 커서 값을 다시 조정하는 복잡한 로직이 필요할 수 있음)
         List<Post> postsToProcess = accessPosts.size() > limit ? accessPosts.subList(0, limit) : accessPosts;
         boolean hasNext = accessPosts.size() > limit;
 
-        // 4. 게시글 ID 리스트 추출 (Bulk 조회에 사용)
+        // 게시글 ID 리스트 추출 (Bulk 조회에 사용)
         List<Long> postIds = postsToProcess.stream()
                 .map(Post::getId)
                 .collect(Collectors.toList());
@@ -285,15 +338,15 @@ public class MainPageService {
                     .build();
         }
 
-        // 5. Bulk 데이터 조회 (N+1 문제 방지)
-        // a. 좋아요/댓글 수 조회
+        // Bulk 데이터 조회 (N+1 문제 방지)
+        // 좋아요/댓글 수 조회
         Map<Long, Integer> likeCounts = postLikeRepository.findLikeCountsByPostIds(postIds);
         Map<Long, Integer> commentCounts = commentRepository.findCommentCountsByPostIds(postIds);
 
-        // b. 현재 유저의 좋아요 여부 조회
+        // 현재 유저의 좋아요 여부 조회
         Set<Long> likedPostIds = postLikeRepository.findLikedPostIdsByUserIdAndPostIds(currentUserId, postIds);
 
-        // c. 미디어 정보 일괄 조회
+        // 미디어 정보 일괄 조회
         List<PostMedia> postMediaList = postMediaRepository.findByPostIdIn(postIds);
         Set<Long> assetIds = postMediaList.stream().map(yeohaenggasijo.tripshot.domain.post.PostMedia::getObjectId).collect(Collectors.toSet());
         List<MediaAsset> mediaAssetList = mediaAssetRepository.findMediaAssetDetailByIdIn(assetIds);
@@ -304,19 +357,19 @@ public class MainPageService {
                         asset -> asset    // Value: MediaAsset 엔티티 자체
                 ));
 
-        // 6. DTO 변환 및 데이터 통합
+        // DTO 변환 및 데이터 통합
         List<PostRes> postResList = postsToProcess.stream()
                 .map(post -> {
-                    // a. 작성자 정보 변환
+                    // 작성자 정보 변환
                     AuthorRes authorRes = postMapper.toAuthorRes(post.getAuthor());
 
-                    // b. 미디어 정보 변환
+                    // 미디어 정보 변환
                     List<PostMedia> postMediasForPost = postMediaList.stream()
                             .filter(pm -> pm.getPost().getId().equals(post.getId()))
                             .collect(Collectors.toList());
                     List<MediaRes> mediaList = postMapper.toMediaResList(postMediasForPost, assetMap);
 
-                    // c. 최종 DTO 생성
+                    // 최종 DTO 생성
                     return postMapper.toPostRes(
                             post,
                             authorRes,
@@ -329,13 +382,13 @@ public class MainPageService {
                 })
                 .collect(Collectors.toList());
 
-        // 7. 다음 커서 값 설정
+        // 다음 커서 값 설정
         LocalDateTime nextCursor = null;
         if (hasNext && !postResList.isEmpty()) {
             nextCursor = postResList.get(postResList.size() - 1).getCreatedAt();
         }
 
-        // 8. 최종 DTO 반환
+        // 최종 DTO 반환
         return AllPostListRes.builder()
                 .posts(postResList)
                 .nextCursor(nextCursor)
@@ -343,34 +396,41 @@ public class MainPageService {
                 .build();
     }
 
-    //TODO: 이거 리팩토링 해야할거같긴함..
-    private List<Post> filterPostsByVisibility(List<Post> posts, Long targetUserId, Long currentUserId) {
+    // 접근 가능 확인
+    private boolean canAccessPost(Post post, Long currentUserId) {
         if (currentUserId == null) {
             // 비로그인 사용자는 PUBLIC만 볼 수 있습니다.
-            return posts.stream()
-                    .filter(post -> post.getVisibility().name().equals("PUBLIC"))
-                    .collect(Collectors.toList());
+            return post.getVisibility().name().equals("PUBLIC");
         }
 
-        return posts.stream().filter(post -> {
-            // 1. 내 게시글은 무조건 접근 가능
-            if (post.getAuthor().getId().equals(currentUserId)) {
-                return true;
-            }
+        // 내 게시글은 무조건 접근 가능
+        if (post.getAuthor().getId().equals(currentUserId)) {
+            return true;
+        }
 
-            // 3. PRIVATE은 다른 사람이면 접근 불가능
-            if (post.getVisibility().name().equals("PRIVATE")) {
-                return false;
-            }
+        // PUBLIC은 모두 접근 가능
+        if (post.getVisibility().name().equals("PUBLIC")) {
+            return true;
+        }
 
-            // 4. FRIEND_ONLY: 현재 유저가 작성자의 친구인지 확인해야 합니다.
-            if (post.getVisibility().name().equals("FRIENDS")) {
-                // isFriend() 메서드가 UserpService에 정의
-                return userService.isFriend(currentUserId, post.getAuthor().getId());
-            }
-
+        // PRIVATE은 다른 사람이면 접근 불가능
+        if (post.getVisibility().name().equals("PRIVATE")) {
             return false;
-        }).collect(Collectors.toList());
+        }
+
+        // FRIENDS: 현재 유저가 작성자의 친구인지 확인
+        if (post.getVisibility().name().equals("FRIENDS")) {
+            return userService.isFriend(currentUserId, post.getAuthor().getId());
+        }
+
+        return false;
+    }
+
+    // 리스트용 필터링 (기존 메서드 - canAccessPost 재사용하도록 수정)
+    private List<Post> filterPostsByVisibility(List<Post> posts, Long currentUserId) {
+        return posts.stream()
+                .filter(post -> canAccessPost(post, currentUserId))
+                .collect(Collectors.toList());
     }
 
 }
