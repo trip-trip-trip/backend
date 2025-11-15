@@ -53,12 +53,12 @@ public class WebPushController {
     public record VapidPublicKeyResponse(String vapidPublicKey) {}
 
     @PostMapping("/subscribe")
-    public ResponseEntity<?> subscribe(@RequestBody SubscriptionReq request) {
+    public ResponseEntity<?> subscribe(@RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId,
+                                       @RequestBody SubscriptionReq request) {
         try {
-            Long userId = Long.valueOf(request.userId());
 
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+            User user = userRepository.findById(currentUserId)
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + currentUserId));
 
             // 기존 구독 찾기
             Optional<Subscription> existingSubscription =
@@ -103,16 +103,14 @@ public class WebPushController {
 
     @PostMapping("/settings")
     @Transactional
-    public ResponseEntity<?> updateNotificationSettings(@RequestBody NotificationSettingReq request) {
+    public ResponseEntity<?> updateNotificationSettings(@RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId, @RequestBody NotificationSettingReq request) {
         try {
             System.out.println("받은 요청: " + request);
 
-            Long userId = request.userId();
+            User user = userRepository.findById(currentUserId)
+                    .orElseThrow(() -> new RuntimeException("User not found: " + currentUserId));
 
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found: " + userId));
-
-            NotificationSetting setting = notificationSettingRepository.findById(userId)
+            NotificationSetting setting = notificationSettingRepository.findById(currentUserId)
                     .orElseGet(() -> {
                         NotificationSetting newSetting = new NotificationSetting();
                         // @MapsId 사용 시 순서가 중요!
@@ -138,7 +136,7 @@ public class WebPushController {
 
             // 여행 중인지 확인해서 메시지 변경
             LocalDate today = LocalDate.now();
-            List<Trip> activeTrips = tripRepository.findActiveTrips(userId, today);
+            List<Trip> activeTrips = tripRepository.findActiveTrips(currentUserId, today);
 
             String message = activeTrips.isEmpty()
                     ? "설정 저장 완료! 여행 시작 시 알림이 전송됩니다."
