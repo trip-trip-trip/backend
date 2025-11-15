@@ -20,7 +20,7 @@ public class DevSeedRunner {
             userRepository.findById(1L).orElseGet(() ->
                     userRepository.save(User.builder()
                             .username("dev-user")
-                            .email("dev-user@example.com")
+                            .tag("a1s2d3f4")
                             .passwordHash("pw")
                             .bio("dev seed user")
                             .avatarUrl(null)
