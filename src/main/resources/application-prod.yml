@@ -83,3 +83,9 @@ sns:
       url: https://YOUR_API_DOMAIN/login/naver
     token:
       url: https://nid.naver.com/oauth2.0/token
+
+webpush:
+  vapid:
+    public-key: ${VAPID_PUBLIC_KEY}
+    private-key: ${VAPID_PRIVATE_KEY}
+    subject: ${VAPID_SUBJECT}
