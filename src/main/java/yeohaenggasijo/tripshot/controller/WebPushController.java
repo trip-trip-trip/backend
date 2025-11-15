@@ -162,8 +162,8 @@ public class WebPushController {
     }
 
     @PostMapping("/test/{userId}")
-    public void sendTestPush(@PathVariable Long userId) {
-        User user = userRepository.findById(userId)
+    public void sendTestPush(@RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId,) {
+        User user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<Subscription> subscriptions = subscriptionRepository.findByUser(user);
@@ -196,9 +196,9 @@ public class WebPushController {
     }
 
     @PostMapping("/test/schedule-immediate/{userId}")
-    public ResponseEntity<?> scheduleImmediate(@PathVariable Long userId) {
+    public ResponseEntity<?> scheduleImmediate(@RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId,) {
         try {
-            User user = userRepository.findById(userId)
+            User user = userRepository.findById(currentUserId)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             // 1분, 2분, 3분 뒤에 발송될 Job 생성
@@ -229,9 +229,9 @@ public class WebPushController {
      * 테스트용: 생성된 Job 목록 조회
      */
     @GetMapping("/test/jobs/{userId}")
-    public ResponseEntity<?> getJobs(@PathVariable Long userId) {
+    public ResponseEntity<?> getJobs(@RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId,) {
         try {
-            User user = userRepository.findById(userId)
+            User user = userRepository.findById(currentUserId)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             List<NotificationJob> jobs = notificationJobRepository.findByUser(user);
