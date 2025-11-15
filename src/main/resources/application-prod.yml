@@ -60,7 +60,7 @@ sns:
       id: 99221206305-3hv46i66gmo27oug2uno8mn7qh9v80fh.apps.googleusercontent.com
       secret: ${GOOGLE_CLIENT_SECRET}
     callback:
-      url: https://YOUR_API_DOMAIN/login/google
+      url: https://tripshot.duckdns.org/login/google
     token:
       url: https://oauth2.googleapis.com/token
 
@@ -70,7 +70,7 @@ sns:
       id: e7680efe3200964b658d4f23796af5a6
       secret: ${KAKAO_CLIENT_SECRET}
     callback:
-      url: https://YOUR_API_DOMAIN/login/kakao
+      url: https://tripshot.duckdns.org/login/kakao
     token:
       url: https://kauth.kakao.com/oauth/token
 
@@ -80,7 +80,7 @@ sns:
       id: nUZ4CJJSLTxiMP53ZKid
       secret: ${NAVER_CLIENT_SECRET}
     callback:
-      url: https://YOUR_API_DOMAIN/login/naver
+      url: https://tripshot.duckdns.org/login/naver
     token:
       url: https://nid.naver.com/oauth2.0/token
 
