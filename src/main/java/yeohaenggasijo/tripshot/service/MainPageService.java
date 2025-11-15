@@ -432,33 +432,5 @@ public class MainPageService {
                 .filter(post -> canAccessPost(post, currentUserId))
                 .collect(Collectors.toList());
     }
-//    private List<Post> filterPostsByVisibility(List<Post> posts, Long currentUserId) {
-//        if (currentUserId == null) {
-//            // 비로그인 사용자는 PUBLIC만 볼 수 있습니다.
-//            return posts.stream()
-//                    .filter(post -> post.getVisibility().name().equals("PUBLIC"))
-//                    .collect(Collectors.toList());
-//        }
-//
-//        return posts.stream().filter(post -> {
-//            // 1. 내 게시글은 무조건 접근 가능
-//            if (post.getAuthor().getId().equals(currentUserId)) {
-//                return true;
-//            }
-//
-//            // 3. PRIVATE은 다른 사람이면 접근 불가능
-//            if (post.getVisibility().name().equals("PRIVATE")) {
-//                return false;
-//            }
-//
-//            // 4. FRIEND_ONLY: 현재 유저가 작성자의 친구인지 확인해야 합니다.
-//            if (post.getVisibility().name().equals("FRIENDS")) {
-//                // isFriend() 메서드가 UserpService에 정의
-//                return userService.isFriend(currentUserId, post.getAuthor().getId());
-//            }
-//
-//            return false;
-//        }).collect(Collectors.toList());
-//    }
 
 }
