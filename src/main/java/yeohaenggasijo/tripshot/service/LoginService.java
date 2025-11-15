@@ -31,15 +31,15 @@ public class LoginService {
         String socialId = info.getSocialId();
 
         return socialAccountRepository.findByProviderAndSocialId(provider, socialId)
-                .map(sa -> new TokenRes("access", jwtUtil.generateAccessToken(sa.getUser().getId(), 60)))
+                .map(sa -> new TokenRes("access", jwtUtil.generateAccessToken(sa.getUser().getId(), 60), sa.getUser()))
                 // 없으면 'signup' 토큰 발급 → 이후 전화번호 검증 + completeSignup 으로 이어짐
                 .orElseGet(() -> new TokenRes("signup",
-                        jwtUtil.generateSignupToken(SocialLoginType.valueOf(provider), socialId, false, null, 15)));
+                        jwtUtil.generateSignupToken(SocialLoginType.valueOf(provider), socialId, false, null, 15),null));
     }
 
     /** 2단계: 가입완료 — 전화번호로 유저 있는지 확인 후, SocialAccount 연결/생성 + access 토큰 발급 */
     @Transactional
-    public String completeSignupAndIssueAccess(SocialLoginType provider, String socialId,
+    public TokenRes completeSignupAndIssueAccess(SocialLoginType provider, String socialId,
                                                String phone, String username, String email) {
         // 이미 다른 유저와 연결되어 있는지 방지
         if (socialAccountRepository.existsByProviderAndSocialId(provider.name(), socialId)) {
@@ -66,6 +66,6 @@ public class LoginService {
         socialAccountRepository.save(sa);
 
         // 3) access 토큰 발급
-        return jwtUtil.generateAccessToken(user.getId(), 60);
+        return new TokenRes("access", jwtUtil.generateAccessToken(user.getId(), 60), user);
     }
 }
