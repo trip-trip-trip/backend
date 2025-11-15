@@ -31,6 +31,10 @@ public class DevHeaderAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest req,
                                     HttpServletResponse res,
                                     FilterChain chain) throws ServletException, IOException {
+        if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
+            chain.doFilter(req, res);
+            return;
+        }
         var context = SecurityContextHolder.getContext();
         var current = context.getAuthentication();
 

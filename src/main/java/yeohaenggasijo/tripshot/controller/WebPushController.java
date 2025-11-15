@@ -19,6 +19,7 @@ import yeohaenggasijo.tripshot.dto.push.NotificationSettingReq;
 import yeohaenggasijo.tripshot.dto.push.SubscriptionReq;
 import yeohaenggasijo.tripshot.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import yeohaenggasijo.tripshot.security.CurrentUserProvider;
 import yeohaenggasijo.tripshot.service.NotificationJobScheduler;
 
 import java.time.LocalDate;
@@ -40,6 +41,7 @@ public class WebPushController {
     private final NotificationJobRepository notificationJobRepository;
     private final ObjectMapper objectMapper;
     private final PushService pushService;
+    private final CurrentUserProvider currentUserProvider;
 
     // VAPID 공개 키를 프론트엔드에 전달하는 API
 
@@ -50,15 +52,21 @@ public class WebPushController {
     }
 
     // 응답 형태를 위한 Inner Class 또는 Record
-    public record VapidPublicKeyResponse(String vapidPublicKey) {}
+    public record VapidPublicKeyResponse(String vapidPublicKey) {
+    }
 
     @PostMapping("/subscribe")
-    public ResponseEntity<?> subscribe(@RequestBody SubscriptionReq request) {
+    public ResponseEntity<?> subscribe(@RequestHeader(value = "X-User-Id", defaultValue = "1") Long currentUserId,
+                                       @RequestBody SubscriptionReq request) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
         try {
-            Long userId = Long.valueOf(request.userId());
 
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+            Long finalCurrentUserId = currentUserId;
+            User user = userRepository.findById(currentUserId)
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + finalCurrentUserId));
 
             // 기존 구독 찾기
             Optional<Subscription> existingSubscription =
@@ -103,16 +111,19 @@ public class WebPushController {
 
     @PostMapping("/settings")
     @Transactional
-    public ResponseEntity<?> updateNotificationSettings(@RequestBody NotificationSettingReq request) {
+    public ResponseEntity<?> updateNotificationSettings(@RequestHeader(value = "X-User-Id", defaultValue = "1") Long currentUserId, @RequestBody NotificationSettingReq request) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
         try {
             System.out.println("받은 요청: " + request);
 
-            Long userId = request.userId();
+            Long finalCurrentUserId = currentUserId;
+            User user = userRepository.findById(currentUserId)
+                    .orElseThrow(() -> new RuntimeException("User not found: " + finalCurrentUserId));
 
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found: " + userId));
-
-            NotificationSetting setting = notificationSettingRepository.findById(userId)
+            NotificationSetting setting = notificationSettingRepository.findById(currentUserId)
                     .orElseGet(() -> {
                         NotificationSetting newSetting = new NotificationSetting();
                         // @MapsId 사용 시 순서가 중요!
@@ -138,7 +149,7 @@ public class WebPushController {
 
             // 여행 중인지 확인해서 메시지 변경
             LocalDate today = LocalDate.now();
-            List<Trip> activeTrips = tripRepository.findActiveTrips(userId, today);
+            List<Trip> activeTrips = tripRepository.findActiveTrips(currentUserId, today);
 
             String message = activeTrips.isEmpty()
                     ? "설정 저장 완료! 여행 시작 시 알림이 전송됩니다."
@@ -164,8 +175,13 @@ public class WebPushController {
     }
 
     @PostMapping("/test/{userId}")
-    public void sendTestPush(@PathVariable Long userId) {
-        User user = userRepository.findById(userId)
+    public void sendTestPush(@RequestHeader(value = "X-User-Id", defaultValue = "1") Long currentUserId) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
+
+        User user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<Subscription> subscriptions = subscriptionRepository.findByUser(user);
@@ -198,9 +214,14 @@ public class WebPushController {
     }
 
     @PostMapping("/test/schedule-immediate/{userId}")
-    public ResponseEntity<?> scheduleImmediate(@PathVariable Long userId) {
+    public ResponseEntity<?> scheduleImmediate(@RequestHeader(value = "X-User-Id", defaultValue = "1") Long currentUserId) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
+
         try {
-            User user = userRepository.findById(userId)
+            User user = userRepository.findById(currentUserId)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             // 1분, 2분, 3분 뒤에 발송될 Job 생성
@@ -231,9 +252,13 @@ public class WebPushController {
      * 테스트용: 생성된 Job 목록 조회
      */
     @GetMapping("/test/jobs/{userId}")
-    public ResponseEntity<?> getJobs(@PathVariable Long userId) {
+    public ResponseEntity<?> getJobs(@RequestHeader(value = "X-User-Id", defaultValue = "1") Long currentUserId) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
         try {
-            User user = userRepository.findById(userId)
+            User user = userRepository.findById(currentUserId)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             List<NotificationJob> jobs = notificationJobRepository.findByUser(user);

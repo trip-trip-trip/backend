@@ -44,11 +44,8 @@ logging:
 # 애플리케이션 옵션
 app:
   dev-header-auth: false
-
-# CORS 필요 시(프론트 도메인 지정)
-# app:
-#   cors:
-#     allowed-origins: "https://www.your-frontend.com"
+  cors:
+    allowed-origins: "https://tripshot.vercel.app"
 
 jwt:
   secret: ${JWT_SECRET}

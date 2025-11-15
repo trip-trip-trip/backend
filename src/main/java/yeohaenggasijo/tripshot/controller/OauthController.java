@@ -33,6 +33,8 @@ public class OauthController {
     private final OtpService otpService;
     private final JwtUtil jwtUtil;
 
+    //TODO: 소셜 플랫폼으로부터 이름, 프로필사진 받아서 프론트한테 반환해주기(response dto에 필드 추가)
+
     // 1. 소셜 로그인 시작
     @GetMapping("/start/{socialLoginType}")
     public void startLogin(
@@ -146,6 +148,7 @@ public class OauthController {
 //        return ResponseEntity.ok(ApiResponse.ok(new TokenRes("access", access)));
 //    }
 
+    //TODO: user 정보 어떤거 반환해야하는지 프론트랑 상의
     @PostMapping("/signup/verify-and-complete")
     public ResponseEntity<ApiResponse<?>> verifyAndComplete(
             @Valid @RequestBody VerifyAndCompleteReq req,
@@ -163,7 +166,7 @@ public class OauthController {
         }
 
         // 2) 가입/연동 + access 토큰 발급 (서비스 내부에서: 전화번호 유저 조회 → 있으면 연결, 없으면 가입 후 연결)
-        String access = loginService.completeSignupAndIssueAccess(
+        TokenRes access = loginService.completeSignupAndIssueAccess(
                 SocialLoginType.valueOf(payload.provider().name()),
                 payload.socialId(),
                 req.phone(),
@@ -171,7 +174,7 @@ public class OauthController {
                 req.email()
         );
 
-        return ResponseEntity.ok(ApiResponse.ok(new TokenRes("access", access)));
+        return ResponseEntity.ok(ApiResponse.ok(access));
     }
 }
 

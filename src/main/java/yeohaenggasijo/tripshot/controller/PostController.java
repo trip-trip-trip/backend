@@ -9,18 +9,21 @@ import yeohaenggasijo.tripshot.dto.trip.req.CreateCommentReq;
 import yeohaenggasijo.tripshot.dto.trip.req.CreatePostReq;
 import yeohaenggasijo.tripshot.dto.trip.req.UpdatePostReq;
 import yeohaenggasijo.tripshot.dto.trip.res.*;
+import yeohaenggasijo.tripshot.security.CurrentUserProvider;
 import yeohaenggasijo.tripshot.service.MainPageService;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/posts")
 public class PostController {
     private final MainPageService mainPageService;
+    private final CurrentUserProvider currentUserProvider;
 
     @PostMapping
     public ApiResponse<PostRes> createPost(
@@ -28,7 +31,10 @@ public class PostController {
             @RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId,
             @RequestBody @Valid CreatePostReq request
     ) {
-
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
         try {
             PostRes response = mainPageService.createPost(currentUserId, request);
 
@@ -50,6 +56,10 @@ public class PostController {
             @RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId,
             @RequestBody @Valid UpdatePostReq request
     ) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
         try {
             PostRes response = mainPageService.updatePost(postId, currentUserId, request);
 
@@ -74,6 +84,10 @@ public class PostController {
             @PathVariable("post_id") Long postId,
             @RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId
     ) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
         try {
             mainPageService.deletePost(postId, currentUserId);
 
@@ -99,6 +113,10 @@ public class PostController {
             @RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId,
             @PathVariable("post_id") Long postId
     ) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
         try {
             // Service의 toggleLike 호출: true면 생성, false면 삭제
             boolean isLiked = mainPageService.toggleLike(postId, currentUserId);
@@ -124,6 +142,10 @@ public class PostController {
             @RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId,
             @RequestBody @Valid CreateCommentReq request
     ) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
         try {
             CommentRes response = mainPageService.createComment(postId, currentUserId, request);
 
@@ -148,6 +170,10 @@ public class PostController {
             @PathVariable("comment_id") Long commentId,
             @RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId
     ) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
         try {
             mainPageService.deleteComment(postId, commentId, currentUserId);
 
@@ -171,6 +197,10 @@ public class PostController {
             @PathVariable("post_id") Long postId,
             @RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId
     ){
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
         try {
             CommentListRes response = mainPageService.getCommentList(postId,  currentUserId);
 
@@ -193,6 +223,10 @@ public class PostController {
     public ApiResponse<PostLocaListRes> getPostLoca(
             @RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId
     ){
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
         try {
             PostLocaListRes response = mainPageService.getPostLoca(currentUserId);
 
@@ -219,6 +253,10 @@ public class PostController {
             @RequestParam(value = "limit", defaultValue = "10") int limit, // 페이지 크기
             @RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId
     ) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
         LocalDateTime cursor = null;
         try {
             // 1. String으로 받은 커서 값을 LocalDateTime으로 안전하게 변환
