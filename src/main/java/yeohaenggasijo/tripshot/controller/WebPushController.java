@@ -176,6 +176,11 @@ public class WebPushController {
 
     @PostMapping("/test/{userId}")
     public void sendTestPush(@RequestHeader(value = "X-User-Id", defaultValue = "1") Long currentUserId) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
+
         User user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -210,6 +215,11 @@ public class WebPushController {
 
     @PostMapping("/test/schedule-immediate/{userId}")
     public ResponseEntity<?> scheduleImmediate(@RequestHeader(value = "X-User-Id", defaultValue = "1") Long currentUserId) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
+
         try {
             User user = userRepository.findById(currentUserId)
                     .orElseThrow(() -> new RuntimeException("User not found"));
@@ -243,6 +253,10 @@ public class WebPushController {
      */
     @GetMapping("/test/jobs/{userId}")
     public ResponseEntity<?> getJobs(@RequestHeader(value = "X-User-Id", defaultValue = "1") Long currentUserId) {
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
         try {
             User user = userRepository.findById(currentUserId)
                     .orElseThrow(() -> new RuntimeException("User not found"));
