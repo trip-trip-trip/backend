@@ -1,6 +1,6 @@
 -- ** 1. 사용자 (USERS) 더미 데이터 **
 -- ID는 10부터 시작.
-INSERT INTO users (id, created_at, updated_at, username, email, password_hash, bio, avatar_url, mobile) VALUES
+INSERT INTO users (id, created_at, updated_at, username, tag, password_hash, bio, avatar_url, mobile) VALUES
                                                                                                             (10, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'alice_traveler', 'alice@trip.com', '$2a$10$hashedpassword1', '여행 기록 마스터. 서울과 제주를 사랑하는 유저.', 'https://placehold.co/100x100/1e90ff/ffffff?text=A', '010-1111-1111'),
                                                                                                             (11, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'bob_photographer', 'bob@trip.com', '$2a$10$hashedpassword2', '사진 전문 에디터. 여행 사진 찍는 게 취미.', 'https://placehold.co/100x100/32cd32/ffffff?text=B', '010-2222-2222'),
                                                                                                             (12, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'charlie_viewer', 'charlie@trip.com', '$2a$10$hashedpassword3', '비디오 감상 전문. 조용히 여행을 즐기는 유저.', 'https://placehold.co/100x100/ff69b4/ffffff?text=C', '010-3333-3333');

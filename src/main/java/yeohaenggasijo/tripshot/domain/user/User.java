@@ -10,7 +10,7 @@ import lombok.*;
 @Table(name = "users",
        uniqueConstraints = {
          @UniqueConstraint(name = "uk_users_username", columnNames = "username"),
-         @UniqueConstraint(name = "uk_users_email", columnNames = "email")
+         @UniqueConstraint(name = "uk_users_tag", columnNames = "tag")
        })
 public class User extends BaseEntity {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,8 +19,8 @@ public class User extends BaseEntity {
   @Column(length = 30, nullable = false)
   private String username;
 
-  @Column(length = 120)
-  private String email;
+  @Column
+  private String tag;
 
   @Column(length = 255)
   private String passwordHash;

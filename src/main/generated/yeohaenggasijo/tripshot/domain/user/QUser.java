@@ -28,13 +28,13 @@ public class QUser extends EntityPathBase<User> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
-    public final StringPath email = createString("email");
-
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final StringPath mobile = createString("mobile");
 
     public final StringPath passwordHash = createString("passwordHash");
+
+    public final StringPath tag = createString("tag");
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;

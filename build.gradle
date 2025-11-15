@@ -29,6 +29,10 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	runtimeOnly 'org.postgresql:postgresql'
 
+	// Jackson for JSON processing
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.16.1'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
 	// Web Push API
 	implementation group: 'nl.martijndwars', name: 'web-push', version: '5.1.1'
 
