@@ -1,6 +1,7 @@
 package yeohaenggasijo.tripshot.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,7 +16,7 @@ import yeohaenggasijo.tripshot.security.jwt.JwtAuthFilter;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final DevHeaderAuthFilter devHeaderAuthFilter;
+    private final ObjectProvider<DevHeaderAuthFilter> devHeaderAuthFilterProvider;
     private final JwtAuthFilter jwtAuthFilter;
 
     @Bean
@@ -40,10 +41,13 @@ public class SecurityConfig {
                         .requestMatchers("/posts/**").permitAll()
                         .requestMatchers("/push/**").permitAll()
                         .requestMatchers("/login/signup/verify-and-complete").hasRole("SIGNUP")
-                        .anyRequest().authenticated())
-                .addFilterBefore(devHeaderAuthFilter, org.springframework.security.web.authentication.AnonymousAuthenticationFilter.class);
+                        .anyRequest().authenticated());
         http.addFilterBefore(jwtAuthFilter, AnonymousAuthenticationFilter.class);
-        http.addFilterBefore(devHeaderAuthFilter, JwtAuthFilter.class);
+
+        DevHeaderAuthFilter devFilter = devHeaderAuthFilterProvider.getIfAvailable();
+        if (devFilter != null) {
+            http.addFilterBefore(devFilter, JwtAuthFilter.class);
+        }
         return http.build();
     }
 }

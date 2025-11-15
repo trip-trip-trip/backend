@@ -15,6 +15,7 @@ import yeohaenggasijo.tripshot.repository.UserRepository;
 import java.io.IOException;
 import java.util.List;
 
+@Profile({"prod"})
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
