@@ -1,180 +1,93 @@
 package yeohaenggasijo.tripshot.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
-import lombok.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.Token;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 import yeohaenggasijo.tripshot.dto.ApiResponse;
 import yeohaenggasijo.tripshot.dto.login.req.OtpSendReq;
 import yeohaenggasijo.tripshot.dto.login.req.OtpVerifyReq;
-import yeohaenggasijo.tripshot.dto.login.req.SignupCompleteReq;
-import yeohaenggasijo.tripshot.dto.login.req.VerifyAndCompleteReq;
-import yeohaenggasijo.tripshot.dto.login.res.TokenRes;
+import yeohaenggasijo.tripshot.dto.login.req.SignupReq; // 신규: tag만 받는 DTO
 import yeohaenggasijo.tripshot.dto.login.res.TokenRes;
 import yeohaenggasijo.tripshot.helper.constants.SocialLoginType;
-import yeohaenggasijo.tripshot.security.jwt.JwtUtil;
-import yeohaenggasijo.tripshot.security.jwt.TokenLevel;
 import yeohaenggasijo.tripshot.service.LoginService;
 import yeohaenggasijo.tripshot.service.OauthService;
 import yeohaenggasijo.tripshot.service.OtpService;
+import yeohaenggasijo.tripshot.security.jwt.JwtUtil;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(value = "/login") // <--- 베이스 경로 설정
-@Slf4j
+@RequestMapping("/login")
 public class OauthController {
+
     private final OauthService oauthService;
     private final LoginService loginService;
-    private final OtpService otpService;
+    private final OtpService otpService; // 기존 사용중이면 그대로
     private final JwtUtil jwtUtil;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    //TODO: 소셜 플랫폼으로부터 이름, 프로필사진 받아서 프론트한테 반환해주기(response dto에 필드 추가)
-
-    // 1. 소셜 로그인 시작
-    @GetMapping("/start/{socialLoginType}")
-    public void startLogin(
-            @PathVariable String socialLoginType, // String으로 받고
-            HttpServletResponse response) throws IOException {
-
-        try {
-            log.info("========== 로그인 시작 ==========");
-            log.info("[Controller] 요청 받은 socialLoginType: {}", socialLoginType);
-
-            SocialLoginType type = SocialLoginType.valueOf(socialLoginType.toUpperCase());
-            log.info("[Controller] Enum 변환 완료: {}", type.name());
-
-            String redirectUrl = oauthService.request(type);
-            log.info("[Controller] Redirect URL 생성 완료: {}", redirectUrl);
-
-            response.sendRedirect(redirectUrl);
-            log.info("[Controller] 리다이렉트 완료");
-
-        } catch (Exception e) {
-            log.error("[Controller] 오류 발생", e);
-            response.getWriter().write("Error: " + e.getMessage());
-        }
+    /** 0) 프론트에서 /login/{provider} 로 진입 → 소셜 권한 부여 페이지로 302 */
+    @GetMapping("/start/{provider}")
+    public void oauthAuthorize(@PathVariable("provider") SocialLoginType provider, HttpServletResponse res) throws IOException {
+        String redirectUrl = oauthService.request(provider);
+        res.sendRedirect(redirectUrl);
     }
 
-    // 2. 콜백 처리
-    @GetMapping(value = "/naver")
-    public ResponseEntity<ApiResponse<TokenRes>> naverCallback(
-            @RequestParam("code") String code,
-            @RequestParam("state") String state) { // 네이버는 state를 함께 줌
+    /** 1) 콜백: 카카오/네이버/구글 공통 처리 → level에 따라 프론트 도메인으로 302 */
+    @GetMapping("/{provider}")
+    public void oauthCallback(@PathVariable("provider") SocialLoginType provider,
+                              @RequestParam("code") String code,
+                              HttpServletResponse res) throws IOException {
 
-        log.info("[Controller] 네이버로부터 받은 code: {}", code);
+        TokenRes tokenRes = oauthService.getParsedSocialAccountInfo(provider, code);
+        String target = "signup".equals(tokenRes.level())
+                ? "https://tripshot.vercel.app/phone"
+                : "https://tripshot.vercel.app/home";
 
-        // 액세스 토큰 획득 후, DTO로 사용자 정보 파싱까지만 수행 (DB 저장 X)
-        TokenRes tokenRes = oauthService.getParsedSocialAccountInfo(SocialLoginType.NAVER, code);
-//        if(tokenRes.success()) {
-//            return ResponseEntity.ok(ApiResponse.ok(tokenRes.token()));
-//        }else {
-//            return ResponseEntity.ok(new ApiResponse(true, 200, "user not found: please proceed to phone verification", null));
-//        }
-        return ResponseEntity.ok(ApiResponse.ok(tokenRes));
+        // 기존 그대로: level, token, user 전달 유지 (user는 JSON→url encode)
+        String userJson = tokenRes.user() == null ? "" : objectMapper.writeValueAsString(tokenRes.user());
+
+        String url = UriComponentsBuilder.fromHttpUrl(target)
+                .queryParam("level", tokenRes.level())
+                .queryParam("token", tokenRes.jwtToken())
+                .queryParam("user", StringUtils.hasText(userJson) ? URLEncoder.encode(userJson, StandardCharsets.UTF_8) : "")
+                .build()
+                .toUriString();
+
+        res.sendRedirect(url);
     }
 
-    @GetMapping(value = "/kakao")
-    public ResponseEntity<ApiResponse<?>> kakaoCallback(
-            @RequestParam("code") String code) {
-
-        log.info("[Controller] 카카오로부터 받은 code: {}", code);
-
-        // 액세스 토큰 획득 후, DTO로 사용자 정보 파싱까지만 수행 (DB 저장 X)
-        TokenRes tokenRes = oauthService.getParsedSocialAccountInfo(SocialLoginType.KAKAO, code);
-//        if(tokenRes.success()) {
-//            return ResponseEntity.ok(ApiResponse.ok(tokenRes.token()));
-//        }else {
-//            return ResponseEntity.ok(new ApiResponse(true, 200, "user not found: please proceed to phone verification", null));
-//        }
-        // log.info("[Controller] DTO 파싱 완료. SocialId: {}", socialInfo.getSocialId());
-        return ResponseEntity.ok(ApiResponse.ok(tokenRes));
-    }
-
-    @GetMapping(value = "/google")
-    public ResponseEntity<ApiResponse<TokenRes>> googleCallback(
-            @RequestParam("code") String code) {
-
-        log.info("[Controller] 구글로부터 받은 code: {}", code);
-
-        // 액세스 토큰 획득 후, DTO로 사용자 정보 파싱까지만 수행 (DB 저장 X)
-        TokenRes tokenRes = oauthService.getParsedSocialAccountInfo(SocialLoginType.GOOGLE, code);
-//        if (tokenRes.success()) {
-//            return ResponseEntity.ok(ApiResponse.ok(tokenRes.token()));
-//        }else {
-//            return ResponseEntity.ok(new ApiResponse(true, 200, "user not found: please proceed to phone verification", null));
-//        }
-        return ResponseEntity.ok(ApiResponse.ok(tokenRes));
-    }
-
+    /** 2-0) 인증번호 발송 (그대로 사용) */
     @PostMapping("/send-code")
-    public ResponseEntity<ApiResponse<?>> sendCode(@Valid @RequestBody OtpSendReq req) {
-        String phone = req.phone();
-        otpService.sendVerificationCode(phone);
-        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Verification code sent", null));
+    public ResponseEntity<ApiResponse<Void>> sendCode(@RequestBody OtpSendReq req) {
+        otpService.sendVerificationCode(req.phone());
+        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
-//    @PostMapping("/verify-code")
-//    public ResponseEntity<ApiResponse<?>> verify(@RequestBody OtpVerifyReq req,
-//                                                        @RequestHeader("Authorization") String authz) {
-//        String token = authz.substring(7);
-//        var p = jwtUtil.parseAndValidate(token);
-//        if (p.level() != TokenLevel.SIGNUP) {
-//            return ResponseEntity.status(403).body(ApiResponse.error(403, "Wrong token level"));
-//        }
-//        boolean v = loginService.verifyCode(req.phone(), req.code());
-//        if (v) {
-//            String newToken = jwtUtil.generateSignupToken(p.provider(), p.socialId(), true, req.phone(), 15);
-//            return ResponseEntity.ok(ApiResponse.ok(new TokenRes(newToken, "signup")));
-//        }
-//        return ResponseEntity.ok(new ApiResponse<>(v, 200, v? "code verified" : "verification failed. please check the code", null));
-//    }
-//
-//    // 가입 완료
-//    @PostMapping("/signup")
-//    public ResponseEntity<ApiResponse<?>> complete(@RequestBody SignupCompleteReq req,
-//                                                          @RequestHeader("Authorization") String authz) {
-//        var p = jwtUtil.parseAndValidate(authz.substring(7));
-//        if (p.level() != TokenLevel.SIGNUP || !p.phoneVerified()) {
-//            return ResponseEntity.status(403).body(ApiResponse.error(403, "Phone not verified"));
-//        }
-//        String access = loginService.completeSignupAndIssueAccess(
-//                p.provider(), p.socialId(), p.phone(), req.username(), req.email()
-//        );
-//        return ResponseEntity.ok(ApiResponse.ok(new TokenRes("access", access)));
-//    }
+    /** 2-1) 전화번호 인증만 수행 → signup 토큰을 phone/verified 반영하여 갱신 반환 */
+    @PostMapping("/verify-code")
+    public ResponseEntity<ApiResponse<TokenRes>> verifyCode(@RequestHeader("Authorization") String authorization,
+                                                            @RequestBody OtpVerifyReq req) {
+        String signupJwt = authorization.replace("Bearer ", "").trim();
+        TokenRes refreshed = loginService.verifyPhoneAndRefreshSignupToken(signupJwt, req.phone(), req.code());
+        return ResponseEntity.ok(ApiResponse.ok(refreshed));
+    }
 
-    //TODO: user 정보 어떤거 반환해야하는지 프론트랑 상의
-    @PostMapping("/signup/verify-and-complete")
-    public ResponseEntity<ApiResponse<?>> verifyAndComplete(
-            @Valid @RequestBody VerifyAndCompleteReq req,
-            @RequestHeader("Authorization") String authz
-    ) {
-        var payload = jwtUtil.parseAndValidate(authz.substring(7));
-        if (payload.level() != TokenLevel.SIGNUP) {
-            return ResponseEntity.status(403).body(ApiResponse.error(403, "Wrong token level"));
-        }
-
-        // 1) 전화번호 코드 검증 (실패시 즉시 400)
-        boolean ok = otpService.verifyCode(req.phone(), req.code());
-        if (!ok) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(400, "Invalid phone verification code"));
-        }
-
-        // 2) 가입/연동 + access 토큰 발급 (서비스 내부에서: 전화번호 유저 조회 → 있으면 연결, 없으면 가입 후 연결)
-        TokenRes access = loginService.completeSignupAndIssueAccess(
-                SocialLoginType.valueOf(payload.provider().name()),
-                payload.socialId(),
-                req.phone(),
-                req.username(),
-                req.email()
-        );
-
+    /** 2-2) 최종 회원가입: tag(string)만 바디로 받고 access 토큰 + 유저 반환 */
+    @PostMapping("/signup")
+    public ResponseEntity<ApiResponse<TokenRes>> completeSignup(@RequestHeader("Authorization") String authorization,
+                                                                @RequestBody SignupReq req) {
+        String signupJwt = authorization.replace("Bearer ", "").trim();
+        TokenRes access = loginService.completeSignupWithSignupToken(signupJwt, req.tag());
         return ResponseEntity.ok(ApiResponse.ok(access));
     }
 }
-
