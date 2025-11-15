@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(reg -> reg
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(
+                                "/ping",
                                 "/favicon.ico",
                                 "/*.html",
                                 "/*.js",
