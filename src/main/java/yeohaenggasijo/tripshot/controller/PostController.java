@@ -160,7 +160,7 @@ public class PostController {
             return ApiResponse.error(HttpStatus.FORBIDDEN.value(), e.getMessage());
         } catch (Exception e) {
             // 그 외 서버 오류: 500 Internal Server Error
-            return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "게시글 작성 중 알 수 없는 오류가 발생했습니다.");
+            return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "댓글 작성 중 알 수 없는 오류가 발생했습니다.");
         }
     }
 
@@ -188,7 +188,7 @@ public class PostController {
             return ApiResponse.error(HttpStatus.FORBIDDEN.value(), e.getMessage());
         } catch (Exception e) {
             // 그 외 서버 오류: 500 Internal Server Error
-            return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "게시글 삭제 중 알 수 없는 오류가 발생했습니다.");
+            return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "댓글 삭제 중 알 수 없는 오류가 발생했습니다.");
         }
     }
 
@@ -204,7 +204,7 @@ public class PostController {
         try {
             CommentListRes response = mainPageService.getCommentList(postId,  currentUserId);
 
-            // 삭제 성공: HTTP 200 OK
+            // 댓글 리스트 조회 성공
             return ApiResponse.ok(response);
 
         } catch (NoSuchElementException e) {
@@ -215,7 +215,7 @@ public class PostController {
             return ApiResponse.error(HttpStatus.FORBIDDEN.value(), e.getMessage());
         } catch (Exception e) {
             // 그 외 서버 오류: 500 Internal Server Error
-            return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "게시글 삭제 중 알 수 없는 오류가 발생했습니다.");
+            return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "게시글 댓글 조회 중 알 수 없는 오류가 발생했습니다.");
         }
     }
 
@@ -230,7 +230,7 @@ public class PostController {
         try {
             PostLocaListRes response = mainPageService.getPostLoca(currentUserId);
 
-            // 삭제 성공: HTTP 200 OK
+            // 위치 불러오기 성공
             return ApiResponse.ok(response);
 
         } catch (NoSuchElementException e) {
@@ -241,8 +241,34 @@ public class PostController {
             return ApiResponse.error(HttpStatus.FORBIDDEN.value(), e.getMessage());
         } catch (Exception e) {
             // 그 외 서버 오류: 500 Internal Server Error
-            return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "게시글 삭제 중 알 수 없는 오류가 발생했습니다.");
+            return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "게시글 위치 조회 중 알 수 없는 오류가 발생했습니다.");
         }
+    }
+
+    @GetMapping("/{post_id}")
+    public ApiResponse<PostRes> getPost(
+            @RequestHeader(value = "X-USER-ID", defaultValue = "1") Long currentUserId,
+            @PathVariable("post_id") Long postId
+    ){
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
+        try {
+            PostRes response = mainPageService.getPost(postId,  currentUserId);
+            return ApiResponse.ok(response);
+
+        } catch (NoSuchElementException e) {
+            // 필수 연관 엔티티(유저/여행 정보 등)를 찾지 못한 경우: 404 Not Found에 준하는 에러
+            return ApiResponse.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        } catch (IllegalStateException e) {
+            // 권한 오류(IllegalStateException)는 403 Forbidden 처리
+            return ApiResponse.error(HttpStatus.FORBIDDEN.value(), e.getMessage());
+        } catch (Exception e) {
+            // 그 외 서버 오류: 500 Internal Server Error
+            return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "게시글 조회 중 알 수 없는 오류가 발생했습니다.");
+        }
+
     }
 
     @GetMapping
