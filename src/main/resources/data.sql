@@ -1,5 +1,6 @@
 -- ** 1. 사용자 (USERS) 더미 데이터 **
 -- ID는 10부터 시작.
+
 INSERT INTO users (id, created_at, updated_at, username, tag, password_hash, bio, avatar_url, mobile)
 VALUES (10, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'alice_traveler', 'alice1234', '$2a$10$hashedpassword1',
         '여행 기록 마스터. 서울과 제주를 사랑하는 유저.', 'https://placehold.co/100x100/1e90ff/ffffff?text=A', '010-1111-1111'),
@@ -22,6 +23,7 @@ VALUES (13, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(),
         '새로운 도시 탐험을 좋아하는 친구 Ethan.',
         'https://placehold.co/100x100/ffa500/000000?text=E',
         '010-5555-5555');
+
 
 
 -- ** 2. 장소 (PLACES) 더미 데이터 (계층 구조 반영) **
