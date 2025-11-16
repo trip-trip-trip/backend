@@ -86,3 +86,15 @@ webpush:
     public-key: ${VAPID_PUBLIC_KEY}
     private-key: ${VAPID_PRIVATE_KEY}
     subject: ${VAPID_SUBJECT}
+
+r2:
+  account-id: ${R2_ACCOUNT_ID}
+  bucket: ${R2_BUCKET}             # ex) tripshot-prod
+  access-key-id: ${R2_ACCESS_KEY_ID}
+  secret-access-key: ${R2_SECRET_ACCESS_KEY}
+  endpoint: https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
+  # (선택) 퍼블릭/프록시 도메인 있으면 써두면 편함
+  public-base-url: ${R2_PUBLIC_DOMAIN}
+
+media:
+  ffmpegPath: /usr/bin/ffmpeg

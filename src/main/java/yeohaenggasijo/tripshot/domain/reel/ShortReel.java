@@ -25,7 +25,7 @@ public class ShortReel extends BaseEntity {
   @Column(length = 80, nullable = false)
   private String title;
 
-  @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "output_media_id", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "output_media_id")
   private MediaAsset outputMedia;
 
   @Enumerated(EnumType.STRING)

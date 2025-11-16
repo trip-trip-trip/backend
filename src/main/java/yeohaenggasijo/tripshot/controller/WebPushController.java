@@ -1,6 +1,6 @@
 package yeohaenggasijo.tripshot.controller;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import nl.martijndwars.webpush.PushService;
 import org.springframework.http.HttpStatus;
