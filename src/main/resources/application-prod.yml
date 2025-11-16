@@ -92,7 +92,9 @@ r2:
   bucket: ${R2_BUCKET}             # ex) tripshot-prod
   access-key-id: ${R2_ACCESS_KEY_ID}
   secret-access-key: ${R2_SECRET_ACCESS_KEY}
-  # S3 호환 endpoint
   endpoint: https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
   # (선택) 퍼블릭/프록시 도메인 있으면 써두면 편함
-  public-base-url: https://tripshot-cdn.example.com
+  public-base-url: ${R2_PUBLIC_DOMAIN}
+
+media:
+  ffmpegPath: /usr/bin/ffmpeg

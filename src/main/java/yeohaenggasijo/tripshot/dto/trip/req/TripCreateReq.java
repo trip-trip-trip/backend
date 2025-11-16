@@ -14,6 +14,6 @@ public record TripCreateReq(
         String description,
         LocalDate startDate,
         LocalDate endDate,
-        List<Long> inviteeUserIds
+        Long placeId
 ) {
 }

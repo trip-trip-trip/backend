@@ -22,7 +22,7 @@ public class R2Config {
                 .httpClient(UrlConnectionHttpClient.builder().build())
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(props.accessKeyId(), props.secretAccessKey())))
-                .region(Region.US_EAST_1) // R2는 region 'auto' 대신 US_EAST_1 사용 + endpointOverride
+                .region(Region.of("auto")) // R2는 region 'auto' 대신 US_EAST_1 사용 + endpointOverride
                 .endpointOverride(URI.create(props.endpoint()))
                 .serviceConfiguration(S3Configuration.builder()
                         .pathStyleAccessEnabled(true) // R2는 path-style 권장
@@ -36,7 +36,7 @@ public class R2Config {
         return S3Presigner.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(props.accessKeyId(), props.secretAccessKey())))
-                .region(Region.US_EAST_1)
+                .region(Region.of("auto"))
                 .endpointOverride(URI.create(props.endpoint()))
                 .build();
     }

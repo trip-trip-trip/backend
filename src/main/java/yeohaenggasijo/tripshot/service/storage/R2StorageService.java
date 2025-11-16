@@ -2,102 +2,87 @@
 package yeohaenggasijo.tripshot.service.storage;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
-import software.amazon.awssdk.services.s3.presigner.*;
-import software.amazon.awssdk.services.s3.presigner.model.*;
-import yeohaenggasijo.tripshot.config.R2Props;
+import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-import java.net.URL;
-import java.time.Duration;
-import java.util.*;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Service
-@RequiredArgsConstructor
 public class R2StorageService {
 
-    private final R2Props props;
     private final S3Client s3;
-    private final S3Presigner presigner;
+    private final String bucket;
+    private final String publicBaseUrl; // 예: https://cdn.tripshot.app  또는 https://<accountid>.r2.cloudflarestorage.com/<bucket>
 
-    /** 업로드용 Key 생성 규칙 (userId/tripId/yyyy/MM/uuid.ext) */
-    public String buildObjectKey(Long userId, Long tripId, String originalFilename) {
-        String ext = Optional.ofNullable(originalFilename)
-                .filter(f -> f.contains("."))
-                .map(f -> f.substring(originalFilename.lastIndexOf('.')))
-                .orElse("");
-        var cal = java.time.ZonedDateTime.now();
-        String y = String.valueOf(cal.getYear());
-        String m = String.format("%02d", cal.getMonthValue());
-        return "%d/%d/%s/%s/%s%s".formatted(
-                userId, tripId, y, m, UUID.randomUUID(), ext
-        );
-    }
+    public R2StorageService(
+            @Value("${r2.endpoint}") String endpoint,                 // https://<accountid>.r2.cloudflarecom
+            @Value("${r2.access-key-id}") String accessKey,
+            @Value("${r2.secret-access-key}") String secretKey,
+            @Value("${r2.bucket}") String bucket,
+            @Value("${r2.public-base-url}") String publicBaseUrl      // 위 설명 참고
+    ) {
+        this.bucket = bucket;
+        this.publicBaseUrl = trimTrailingSlash(publicBaseUrl);
 
-    /** PUT Presigned URL 생성 */
-    public PresignedPutResponse createPresignedPutUrl(String key, String contentType, long expiresSeconds) {
-        PutObjectRequest put = PutObjectRequest.builder()
-                .bucket(props.bucket())
-                .key(key)
-                .contentType(contentType) // 브라우저에서 동일하게 보내야 함
+        this.s3 = S3Client.builder()
+                .httpClientBuilder(UrlConnectionHttpClient.builder())
+                .endpointOverride(URI.create(endpoint))
+                .region(Region.of("auto")) // R2는 무시되지만 필수 파라미터
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(accessKey, secretKey)
+                ))
+                .serviceConfiguration(S3Configuration.builder()
+                        .pathStyleAccessEnabled(true) // R2는 path-style 권장
+                        .build())
                 .build();
-
-        PresignedPutObjectRequest pre = presigner.presignPutObject(b -> b
-                .signatureDuration(Duration.ofSeconds(expiresSeconds))
-                .putObjectRequest(put)
-        );
-
-        URL url = pre.url();
-        // S3 V4 서명은 특정 헤더를 같이 전송해야 할 수도 있음 → 프론트에 전달
-        Map<String, List<String>> headers = pre.signedHeaders();
-
-        return new PresignedPutResponse(url.toString(), headers);
     }
 
-    /** GET Presigned URL 생성 (비공개 버킷에서 내려받기/썸네일 조회용) */
-    public String createPresignedGetUrl(String key, long expiresSeconds) {
-        GetObjectRequest get = GetObjectRequest.builder()
-                .bucket(props.bucket())
-                .key(key)
-                .build();
-        PresignedGetObjectRequest pre = presigner.presignGetObject(b -> b
-                .signatureDuration(Duration.ofSeconds(expiresSeconds))
-                .getObjectRequest(get)
-        );
-        return pre.url().toString();
-    }
-
-    /** 객체 존재 확인(업로드 완료 후 검증용) */
-    public boolean exists(String key) {
+    /** Path 기반 업로드 (다른 레이어에서 가장 쓰기 좋음) */
+    public StorageUploader.UploadResult upload(Path file, String contentType, String objectKey) {
         try {
-            s3.headObject(HeadObjectRequest.builder()
-                    .bucket(props.bucket())
-                    .key(key)
-                    .build());
-            return true;
-        } catch (S3Exception e) {
-            return false;
+            String ct = (contentType != null) ? contentType : guessContentType(file);
+            PutObjectRequest req = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(objectKey)
+                    .contentType(ct)
+                    .build();
+
+            var res = s3.putObject(req, RequestBody.fromFile(file));
+
+            String url = buildPublicUrl(objectKey);
+            long size = Files.size(file);
+            String etag = res.eTag();
+
+            return new StorageUploader.UploadResult(objectKey, url, etag, size);
+        } catch (IOException e) {
+            throw new RuntimeException("R2 upload failed: " + objectKey, e);
         }
     }
 
-    /** (선택) 삭제 */
-    public void delete(String key) {
-        s3.deleteObject(DeleteObjectRequest.builder()
-                .bucket(props.bucket())
-                .key(key)
-                .build());
+    private String guessContentType(Path file) throws IOException {
+        String ct = Files.probeContentType(file);
+        return (ct != null) ? ct : "application/octet-stream";
     }
 
-    /** 퍼블릭 경로를 쓰는 경우 (CDN/커스텀 도메인) */
-//    public Optional<String> publicUrl(String key) {
-//        return Optional.ofNullable(props.publicBaseUrl())
-//                .filter(u -> !u.isBlank())
-//                .map(u -> u.endsWith("/") ? u + key : u + "/" + key);
-//    }
+    private String buildPublicUrl(String key) {
+        // publicBaseUrl 이 이미 버킷까지 포함한 형태라면 그대로 붙입니다.
+        return publicBaseUrl + "/" + key;
+    }
 
-    public record PresignedPutResponse(
-            String url,
-            Map<String, List<String>> headers // 프론트가 그대로 붙여서 PUT
-    ) {}
+    private String trimTrailingSlash(String s) {
+        if (s == null) return "";
+        return s.endsWith("/") ? s.substring(0, s.length() - 1) : s;
+    }
 }
+

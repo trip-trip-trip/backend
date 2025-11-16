@@ -24,7 +24,7 @@ public class Scrapbook extends BaseEntity {
   @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "creator_id", nullable = false)
   private User creator;
 
-  @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "template_id", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "template_id")
   private ScrapbookTemplate template;
 
   @Column(length = 80, nullable = false)

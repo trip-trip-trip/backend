@@ -1,47 +1,48 @@
 // src/main/java/.../controller/StorageController.java
 package yeohaenggasijo.tripshot.controller;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import yeohaenggasijo.tripshot.security.CurrentUserProvider;
+import org.springframework.web.multipart.MultipartFile;
+import yeohaenggasijo.tripshot.dto.ApiResponse;
 import yeohaenggasijo.tripshot.service.storage.R2StorageService;
-import yeohaenggasijo.tripshot.dto.media.*;
 
-// (보안) 인증 필요: @PreAuthorize or SecurityConfig에서 보호
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
+
 @RestController
-@RequestMapping("/storage")
 @RequiredArgsConstructor
+@RequestMapping("/storage")
 public class StorageController {
 
-    private final R2StorageService storageService;
-    private final CurrentUserProvider currentUser; // 앞서 구성한 유저 컨텍스트
+    private final R2StorageService r2; // 컨트롤러는 서비스에만 의존
 
-    @PostMapping("/uploads")
-    public ResponseEntity<UploadRes> createUploadUrl(@Valid @RequestBody UploadReq req) {
-        Long userId = currentUser.requireUserId();
+    @PostMapping("/upload")
+    public ResponseEntity<ApiResponse<UploadRes>> upload(@RequestParam("file") MultipartFile file) throws Exception {
+        // 1) 임시파일로 저장
+        String ext = getExt(file.getOriginalFilename());
+        Path temp = Files.createTempFile("upload_", ext);
 
-        // 파일 종류 검증 (이미지 MIME만 허용 예시)
-        if (!req.contentType().startsWith("image/")) {
-            return ResponseEntity.badRequest().build();
-        }
+        file.transferTo(temp.toFile());
 
-        String key = storageService.buildObjectKey(userId, req.tripId(), req.fileName());
-        var pre = storageService.createPresignedPutUrl(key, req.contentType(), 600); // 10분
+        // 2) 객체키 생성 (폴더 전략은 서비스 정책에 맞게)
+        String key = "uploads/" + UUID.randomUUID() + ext;
 
-        // 퍼블릭 도메인 사용 시 즉시 접근 가능한 URL (선택)
-//        Optional<String> publicUrl = storageService.publicUrl(key);
-        // 비공개 버킷이면 presigned GET 제공(선택)
-        String getUrl = storageService.createPresignedGetUrl(key, 600);
+        // 3) 서비스 업로드
+        var result = r2.upload(temp, file.getContentType(), key);
 
-        UploadRes resp = new UploadRes(
-                key,
-                pre.url(),
-                pre.headers(),
-                null,
-                getUrl
-        );
-        return ResponseEntity.ok(resp);
+        // 4) 응답
+        UploadRes body = new UploadRes(result.key(), result.url(), result.etag(), result.size());
+        return ResponseEntity.ok(ApiResponse.ok(body));
     }
+
+    private String getExt(String name) {
+        if (name == null) return "";
+        int i = name.lastIndexOf('.');
+        return (i >= 0) ? name.substring(i) : "";
+    }
+
+    public record UploadRes(String key, String url, String etag, long size) {}
 }

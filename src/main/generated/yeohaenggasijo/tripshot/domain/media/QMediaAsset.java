@@ -28,6 +28,8 @@ public class QMediaAsset extends EntityPathBase<MediaAsset> {
 
     public final StringPath comment = createString("comment");
 
+    public final EnumPath<yeohaenggasijo.tripshot.domain.common.ContentType> contentType = createEnum("contentType", yeohaenggasijo.tripshot.domain.common.ContentType.class);
+
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 

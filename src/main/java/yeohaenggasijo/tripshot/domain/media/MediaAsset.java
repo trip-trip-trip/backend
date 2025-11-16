@@ -2,6 +2,7 @@ package yeohaenggasijo.tripshot.domain.media;
 
 import yeohaenggasijo.tripshot.domain.base.BaseEntity;
 import yeohaenggasijo.tripshot.domain.common.CaptureType;
+import yeohaenggasijo.tripshot.domain.common.ContentType;
 import yeohaenggasijo.tripshot.domain.common.MediaKind;
 import yeohaenggasijo.tripshot.domain.trip.Trip;
 import yeohaenggasijo.tripshot.domain.user.User;
@@ -25,6 +26,10 @@ public class MediaAsset extends BaseEntity {
 
   @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "trip_id", nullable = false)
   private Trip trip;
+
+  @Enumerated(EnumType.STRING)
+  @Column(length = 10, nullable = false)
+  private ContentType contentType;
 
   @Enumerated(EnumType.STRING)
   @Column(length = 10, nullable = false)

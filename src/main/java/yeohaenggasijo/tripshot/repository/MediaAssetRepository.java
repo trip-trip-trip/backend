@@ -3,6 +3,8 @@ package yeohaenggasijo.tripshot.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import yeohaenggasijo.tripshot.domain.common.ContentType;
+import yeohaenggasijo.tripshot.domain.common.MediaKind;
 import yeohaenggasijo.tripshot.domain.media.MediaAsset;
 
 import java.util.List;
@@ -21,4 +23,5 @@ public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
     List<MediaAsset> findMediaAssetMapByObjectIdsQuery(@Param("assetIds") Set<Long> assetIds);
 
 
+    List<MediaAsset> findByTrip_IdAndContentTypeOrderByTakenAt(Long tripId, ContentType contentType);
 }
