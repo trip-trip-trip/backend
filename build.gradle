@@ -21,11 +21,74 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'com.google.code.gson:gson:2.10.1'
 	runtimeOnly 'com.h2database:h2'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	runtimeOnly 'org.postgresql:postgresql'
+
+	// Jackson for JSON processing
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.16.1'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+	// Web Push API
+	implementation group: 'nl.martijndwars', name: 'web-push', version: '5.1.1'
+
+	// Web Push API가 사용하는 VAPID Key를 암호화 라이브러리
+	implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.70'
+
+	// Querydsl JPA 의존성 (런타임에 사용)
+	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+
+	// Querydsl Annotation Processor (컴파일 시 Q-클래스 생성에 사용)
+	annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+
+	// JPA와 Lombok과의 충돌 방지 설정 (필수)
+	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+	annotationProcessor 'org.projectlombok:lombok'
+
+	compileOnly 'org.projectlombok:lombok:1.18.28'
+	annotationProcessor 'org.projectlombok:lombok:1.18.28'
+
+	testCompileOnly 'org.projectlombok:lombok:1.18.28'
+	testAnnotationProcessor 'org.projectlombok:lombok:1.18.28'
+
+	// JWT (JJWT)
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+	runtimeOnly   'io.jsonwebtoken:jjwt-impl:0.12.5'
+	runtimeOnly   'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+
+}
+
+bootJar {
+	archiveFileName = 'app_.jar'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// build.gradle 하단 또는 최상단에 추가
+sourceSets {
+	main {
+		java {
+			// generated 디렉토리를 소스 경로로 추가
+			srcDirs = ['src/main/java', 'src/main/generated']
+		}
+	}
+}
+
+// 빌드 시 Q-클래스 파일이 생성될 위치 지정
+tasks.withType(JavaCompile) {
+	options.generatedSourceOutputDirectory = file('src/main/generated')
+}
+
+// clean 태스크 실행 시 generated 폴더도 같이 삭제하도록 설정
+clean {
+	delete file('src/main/generated')
+}
+

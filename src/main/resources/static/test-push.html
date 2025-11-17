@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>웹 푸시 알림 테스트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .danger {
+            background: #f44336;
+        }
+        .danger:hover {
+            background: #da190b;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        #status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px 0;
+            font-weight: bold;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔔 웹 푸시 알림 테스트</h1>
+
+    <div id="status"></div>
+
+    <!-- 1단계: 구독 -->
+    <div class="section">
+        <h2>1️⃣ 푸시 알림 구독</h2>
+        <label for="userId">User ID:</label>
+        <input type="number" id="userId" value="1" placeholder="테스트할 유저 ID 입력">
+        <button id="subscribeBtn" onclick="subscribeToPush()">구독하기</button>
+        <button class="danger" onclick="unsubscribe()">구독 해제</button>
+    </div>
+
+    <!-- 2단계: 알림 설정 -->
+    <div class="section">
+        <h2>2️⃣ 알림 시간 설정</h2>
+        <label for="timesPerDay">하루 알림 횟수:</label>
+        <input type="number" id="timesPerDay" value="3" min="1" max="10">
+
+        <label for="startHour">시작 시간 (시):</label>
+        <input type="number" id="startHour" value="7" min="0" max="23">
+
+        <label for="endHour">종료 시간 (시):</label>
+        <input type="number" id="endHour" value="12" min="0" max="23">
+
+        <button onclick="updateSettings()">설정 저장</button>
+    </div>
+
+    <!-- 3단계: 즉시 테스트 -->
+    <div class="section">
+        <h2>3️⃣ 즉시 푸시 테스트</h2>
+        <p style="color: #666;">백엔드에 테스트 API를 추가해야 합니다.</p>
+        <button onclick="sendTestPush()">테스트 푸시 보내기</button>
+    </div>
+
+    <!-- 4단계: 스케줄링 테스트 -->
+    <div class="section">
+        <h2>4️⃣ 스케줄링 테스트</h2>
+        <p style="color: #666;">Job을 생성하고 1~3분 뒤 알림을 받아보세요.</p>
+        <button onclick="scheduleImmediate()">1~3분 뒤 알림 예약</button>
+        <button onclick="viewJobs()">예약된 알림 보기</button>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:8080'; // 백엔드 URL
+    let vapidPublicKey = '';
+
+    // 페이지 로드 시 VAPID 키 가져오기
+    async function loadVapidKey() {
+        try {
+            const response = await fetch(`${API_BASE}/push/vapid-key`);
+            const data = await response.json();
+            vapidPublicKey = data.vapidPublicKey;
+            showStatus('VAPID 키 로드 완료', 'success');
+        } catch (error) {
+            showStatus('VAPID 키 로드 실패: ' + error.message, 'error');
+        }
+    }
+
+    // Service Worker 등록
+    async function registerServiceWorker() {
+        if (!('serviceWorker' in navigator)) {
+            showStatus('이 브라우저는 Service Worker를 지원하지 않습니다', 'error');
+            return null;
+        }
+
+        try {
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            showStatus('Service Worker 등록 완료', 'success');
+            return registration;
+        } catch (error) {
+            showStatus('Service Worker 등록 실패: ' + error.message, 'error');
+            return null;
+        }
+    }
+
+    // Base64 URL Safe 변환
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/\-/g, '+')
+            .replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    // 푸시 구독
+    async function subscribeToPush() {
+        const userId = document.getElementById('userId').value;
+        if (!userId) {
+            showStatus('User ID를 입력하세요', 'error');
+            return;
+        }
+
+        if (!vapidPublicKey) {
+            await loadVapidKey();
+        }
+
+        const registration = await registerServiceWorker();
+        if (!registration) return;
+
+        try {
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+            });
+
+            // 구독 정보를 백엔드로 전송
+            const subscriptionJson = subscription.toJSON();
+            const response = await fetch(`${API_BASE}/push/subscribe`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    endpoint: subscriptionJson.endpoint,
+                    p256dh: subscriptionJson.keys.p256dh,
+                    auth: subscriptionJson.keys.auth
+                })
+            });
+
+            if (response.ok) {
+                showStatus('✅ 푸시 알림 구독 완료!', 'success');
+                localStorage.setItem('subscribedUserId', userId);
+            } else {
+                showStatus('구독 저장 실패', 'error');
+            }
+        } catch (error) {
+            showStatus('구독 실패: ' + error.message, 'error');
+        }
+    }
+
+    // 구독 해제
+    async function unsubscribe() {
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription();
+            if (subscription) {
+                await subscription.unsubscribe();
+                showStatus('구독 해제 완료', 'info');
+                localStorage.removeItem('subscribedUserId');
+            }
+        } catch (error) {
+            showStatus('구독 해제 실패: ' + error.message, 'error');
+        }
+    }
+
+    // 알림 설정 저장 - 수정된 부분!
+    async function updateSettings() {
+        const userId = document.getElementById('userId').value || localStorage.getItem('subscribedUserId');
+        const timesPerDay = document.getElementById('timesPerDay').value;
+        const startHour = parseInt(document.getElementById('startHour').value);
+        const endHour = parseInt(document.getElementById('endHour').value);
+
+        if (!userId) {
+            showStatus('먼저 구독하세요', 'error');
+            return;
+        }
+
+        if (startHour >= endHour) {
+            showStatus('❌ 종료 시간이 시작 시간보다 늦어야 합니다', 'error');
+            return;
+        }
+
+        try {
+            const requestBody = {
+                userId: parseInt(userId),
+                timesPerDay: parseInt(timesPerDay),
+                timezone: [startHour, endHour]
+            };
+
+            console.log('전송 데이터:', requestBody);
+
+            const response = await fetch(`${API_BASE}/push/settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (response.ok) {
+                showStatus(`✅ 알림 설정 저장 완료! (${startHour}시~${endHour}시 사이 ${timesPerDay}회)`, 'success');
+            } else {
+                const errorText = await response.text();
+                showStatus('설정 저장 실패: ' + errorText, 'error');
+            }
+        } catch (error) {
+            showStatus('설정 저장 실패: ' + error.message, 'error');
+        }
+    }
+
+    // 테스트 푸시 (백엔드에 API 필요)
+    async function sendTestPush() {
+        const userId = document.getElementById('userId').value || localStorage.getItem('subscribedUserId');
+        if (!userId) {
+            showStatus('먼저 구독하세요', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/push/test/${userId}`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                showStatus('✅ 테스트 푸시 전송 요청 완료! 잠시 후 알림을 확인하세요.', 'success');
+            } else {
+                const errorText = await response.text();
+                showStatus('테스트 푸시 전송 실패: ' + errorText, 'error');
+            }
+        } catch (error) {
+            showStatus('테스트 푸시 전송 실패: ' + error.message, 'error');
+        }
+    }
+
+    // 상태 메시지 표시
+    function showStatus(message, type) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.textContent = message;
+        statusDiv.className = type;
+        console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+
+    // 페이지 로드 시 초기화
+    window.addEventListener('load', () => {
+        loadVapidKey();
+        const savedUserId = localStorage.getItem('subscribedUserId');
+        if (savedUserId) {
+            document.getElementById('userId').value = savedUserId;
+            showStatus('저장된 User ID 로드됨: ' + savedUserId, 'info');
+        }
+    });
+
+    // 1~3분 뒤 알림 예약
+    async function scheduleImmediate() {
+        const userId = document.getElementById('userId').value || localStorage.getItem('subscribedUserId');
+        if (!userId) {
+            showStatus('먼저 User ID를 입력하세요', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/push/test/schedule-immediate/${userId}`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                showStatus('✅ ' + data.message + ' 알림을 기다려보세요!', 'success');
+            } else {
+                showStatus('예약 실패', 'error');
+            }
+        } catch (error) {
+            showStatus('에러: ' + error.message, 'error');
+        }
+    }
+
+    // 예약된 알림 조회
+    async function viewJobs() {
+        const userId = document.getElementById('userId').value || localStorage.getItem('subscribedUserId');
+        if (!userId) {
+            showStatus('먼저 User ID를 입력하세요', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/push/test/jobs/${userId}`);
+            const data = await response.json();
+
+            if (data.success) {
+                showStatus(`✅ 예약된 알림: ${data.count}개`, 'success');
+                console.log('Jobs:', data.jobs);
+
+                // 알림 목록을 보기 좋게 표시
+                if (data.count > 0) {
+                    let jobList = '\n예약 목록:\n';
+                    data.jobs.forEach(job => {
+                        jobList += `- ${job.scheduledAt} (${job.status})\n`;
+                    });
+                    alert(jobList);
+                }
+            } else {
+                showStatus('조회 실패', 'error');
+            }
+        } catch (error) {
+            showStatus('에러: ' + error.message, 'error');
+        }
+    }
+</script>
+</body>
+</html>
