@@ -3,6 +3,8 @@ import lombok.RequiredArgsConstructor;
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription; // web-push 라이브러리의 Subscription 객체
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ public class NotificationJobSender {
     private final NotificationJobRepository jobRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final PushService pushService; // WebPushConfig에서 Bean으로 등록된 객체가 주입됨
+    private static final Logger logger = LoggerFactory.getLogger(NotificationJobSender.class);
 
     /**
      * 1분마다 실행되어 발송할 시간이 된 알림 Job을 처리
@@ -95,12 +98,19 @@ public class NotificationJobSender {
             // 알림 객체 생성
             Notification notification = new Notification(pushSubscription, payload);
 
+
             try {
                 // PushService.send() 호출을 try-catch로 감싸서 IOException을 처리
                 pushService.send(notification);
+                logger.info("\npayload: {}", payload);
+                logger.info("\n push notification: {}", notification);
+                logger.info("\nendpoint:{}", sub.getEndpoint());
+                logger.info("\nauth:{}", sub.getAuth());
+
                 System.out.println("    → 푸시 전송 완료: " + sub.getEndpoint().substring(0, 50) + "...");
             } catch (java.io.IOException e) {
                 // IOException 발생 시, 런타임 예외로 감싸서 상위 catch 블록으로 던짐
+                logger.error("Error sending push notification: {}", e.getMessage());
                 throw new RuntimeException("PushService network error: " + e.getMessage(), e);
             }
         }
