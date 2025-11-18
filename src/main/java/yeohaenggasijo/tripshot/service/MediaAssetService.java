@@ -3,6 +3,8 @@ package yeohaenggasijo.tripshot.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,6 +40,7 @@ public class MediaAssetService {
     private final UserRepository userRepository;
     private final StorageUploader storageUploader;
     private final CurrentUserProvider currentUser; // 로그인 유저 확인
+    private static final Logger logger = LoggerFactory.getLogger(MediaAssetService.class);
 
     @Transactional
     public MediaAssetRes createMediaAssetFromMultipart(MultipartFile file,
@@ -130,6 +133,7 @@ public class MediaAssetService {
             );
 
         } catch (IOException e) {
+            logger.info("Could not create media asset of type: {}, error: {}", type, e, e);
             throw new IllegalStateException("파일 업로드 실패", e);
         } finally {
             if (tmp != null) try {
