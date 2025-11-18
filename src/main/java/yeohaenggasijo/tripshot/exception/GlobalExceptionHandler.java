@@ -2,6 +2,7 @@ package yeohaenggasijo.tripshot.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -47,6 +48,29 @@ public class GlobalExceptionHandler {
 //        return ResponseEntity.badRequest()
 //                .body(ApiResponse.of(false, 400, "Constraint violation", msgs));
 //    }
+    /** 서비스/도메인 단에서 던지는 IllegalArgumentException → 400으로 내려주기 */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegal(IllegalArgumentException ex) {
+        log.warn("[BAD-REQUEST] {}", ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.error(400, ex.getMessage()));
+    }
+
+    /** DB 제약조건 위반 (unique 등) 처리 — 디버깅용으로 constraint 이름까지 내려줌 */
+    @ExceptionHandler({ConstraintViolationException.class, DataIntegrityViolationException.class})
+    public ResponseEntity<ApiResponse<Void>> handleDbConstraint(Exception ex) {
+        String message;
+        if (ex instanceof ConstraintViolationException cve) {
+            message = "Database constraint violation: " + cve.getConstraintName();
+        } else {
+            message = "Database constraint violation: " + ex.getMessage();
+        }
+        log.error("[DB-CONSTRAINT] {}", message, ex);
+        // 보통 409 Conflict 또는 400 중 택1 — 여기서는 409 사용
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(409, message));
+    }
+
 
     /** 타입 불일치, JSON 파싱 문제 등 일반적인 400 */
     @ExceptionHandler({
@@ -70,6 +94,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleUnknown(Exception ex) {
         log.error("[UNEXPECTED] {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(500, "Internal server error"));
+                .body(ApiResponse.error(
+                        500,
+                        "[UNEXPECTED] " + ex.getClass().getSimpleName() + ": " + ex.getMessage()
+                ));
     }
+
+
+
+
 }
