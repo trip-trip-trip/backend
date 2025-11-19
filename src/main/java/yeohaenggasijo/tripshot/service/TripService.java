@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import yeohaenggasijo.tripshot.domain.common.*;
 import yeohaenggasijo.tripshot.domain.media.MediaAsset;
+import yeohaenggasijo.tripshot.domain.place.Place;
 import yeohaenggasijo.tripshot.domain.reel.ShortReel;
 import yeohaenggasijo.tripshot.domain.reel.ShortReelItem;
 import yeohaenggasijo.tripshot.domain.scrapbook.Scrapbook;
@@ -20,11 +21,10 @@ import yeohaenggasijo.tripshot.dto.reel.ReelItemRes;
 import yeohaenggasijo.tripshot.dto.reel.ReelRes;
 import yeohaenggasijo.tripshot.dto.scrapbook.ScrapbookRes;
 import yeohaenggasijo.tripshot.dto.trip.req.TripCreateReq;
-import yeohaenggasijo.tripshot.dto.trip.res.TripDetailRes;
-import yeohaenggasijo.tripshot.dto.trip.res.TripMediaRes;
-import yeohaenggasijo.tripshot.dto.trip.res.TripRes;
+import yeohaenggasijo.tripshot.dto.trip.res.*;
 import yeohaenggasijo.tripshot.exception.BadRequestException;
 import yeohaenggasijo.tripshot.repository.*;
+import yeohaenggasijo.tripshot.security.CurrentUserProvider;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -47,6 +47,7 @@ public class TripService {
     private final PlaceRepository placeRepository;
     private final TripParticipantRepository tripParticipantRepository;
     private static final Logger logger = LoggerFactory.getLogger(TripService.class);
+    private final CurrentUserProvider currentUserProvider;
 
 
     @Transactional
@@ -124,7 +125,7 @@ public class TripService {
         }
 
         // 4) TripRes 조립해서 반환
-        return TripRes.from(trip, names, profileImgs, tags);
+        return TripRes.fromWithUserInfo(trip, names, profileImgs, tags);
     }
     @Transactional(readOnly = true)
     public TripMediaRes getContents(Long tripId) {
@@ -157,6 +158,39 @@ public class TripService {
                 .toList();
 
         return new TripMediaRes(photos, scrapbooks, reelItems, reelRes);
+    }
+
+    @Transactional(readOnly = true)
+    public OngoingTripRes isActiveTrip() {
+        Long loggedInUserId = currentUserProvider.requireUserId();
+        List<Trip> ongoingTrip = tripRepository.findActiveTrips(loggedInUserId,LocalDate.now());
+        if (ongoingTrip.isEmpty()) {
+            return OngoingTripRes.empty();
+        }
+
+        List<TripRes> dataList = new ArrayList<>();
+        for (Trip trip : ongoingTrip) {
+            List<TripParticipant> tripParticipantList = tripParticipantRepository.findByTrip_Id(trip.getId());
+            List<User> userList = tripParticipantList.stream().map(TripParticipant::getUser).toList();
+            List<String> userNameList = userList.stream().map(User::getUsername).toList();
+            List<String> profileImgList = userList.stream().map(User::getAvatarUrl).toList();
+            List<String> tagList = userList.stream().map(User::getTag).toList();
+            TripRes tripRes = TripRes.fromWithUserInfo(trip, userNameList, profileImgList, tagList);
+            dataList.add(tripRes);
+        }
+
+        return OngoingTripRes.from(dataList);
+
+
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlaceRes> getAllPlaces() {
+        List<Place> places = placeRepository.findAll(); // 필요하면 Sort 추가 가능
+
+        return places.stream()
+                .map(PlaceRes::from)
+                .toList();
     }
 
     /* ---------- 아래는 DTO 매핑 헬퍼들 ---------- */
