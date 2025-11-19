@@ -8,6 +8,7 @@ import yeohaenggasijo.tripshot.domain.user.User;
 import yeohaenggasijo.tripshot.dto.ApiResponse;
 import yeohaenggasijo.tripshot.dto.reel.ReelStatusRes;
 import yeohaenggasijo.tripshot.dto.trip.req.TripCreateReq;
+import yeohaenggasijo.tripshot.dto.trip.res.OngoingTripRes;
 import yeohaenggasijo.tripshot.dto.trip.res.TripDetailRes;
 import yeohaenggasijo.tripshot.dto.trip.res.TripMediaRes;
 import yeohaenggasijo.tripshot.dto.trip.res.TripRes;
@@ -57,6 +58,11 @@ public class TripController {
     @GetMapping("/{id}/reel")
     public ResponseEntity<ApiResponse<ReelStatusRes>> reel(@PathVariable Long id) throws IOException {
         return ResponseEntity.ok(ApiResponse.ok(shortReelService.getOrQueueWhenEnded(id)));
+    }
+
+    @GetMapping("/isActiveTrips")
+    public ResponseEntity<ApiResponse<OngoingTripRes>> isTraveling(){
+        return ResponseEntity.ok(ApiResponse.ok(tripService.isActiveTrip()));
     }
 
 
