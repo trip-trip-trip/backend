@@ -8,10 +8,7 @@ import yeohaenggasijo.tripshot.domain.user.User;
 import yeohaenggasijo.tripshot.dto.ApiResponse;
 import yeohaenggasijo.tripshot.dto.reel.ReelStatusRes;
 import yeohaenggasijo.tripshot.dto.trip.req.TripCreateReq;
-import yeohaenggasijo.tripshot.dto.trip.res.OngoingTripRes;
-import yeohaenggasijo.tripshot.dto.trip.res.TripDetailRes;
-import yeohaenggasijo.tripshot.dto.trip.res.TripMediaRes;
-import yeohaenggasijo.tripshot.dto.trip.res.TripRes;
+import yeohaenggasijo.tripshot.dto.trip.res.*;
 import yeohaenggasijo.tripshot.security.CurrentUserProvider;
 import yeohaenggasijo.tripshot.service.ShortReelService;
 import yeohaenggasijo.tripshot.service.TripService;
@@ -63,6 +60,14 @@ public class TripController {
     @GetMapping("/isActiveTrips")
     public ResponseEntity<ApiResponse<OngoingTripRes>> isTraveling(){
         return ResponseEntity.ok(ApiResponse.ok(tripService.isActiveTrip()));
+    }
+
+    @GetMapping("/places")
+    public ResponseEntity<ApiResponse<List<PlaceRes>>> getPlaces() {
+        List<PlaceRes> places = tripService.getAllPlaces();
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, 200, "OK", places)
+        );
     }
 
 

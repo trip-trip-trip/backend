@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import yeohaenggasijo.tripshot.domain.common.*;
 import yeohaenggasijo.tripshot.domain.media.MediaAsset;
+import yeohaenggasijo.tripshot.domain.place.Place;
 import yeohaenggasijo.tripshot.domain.reel.ShortReel;
 import yeohaenggasijo.tripshot.domain.reel.ShortReelItem;
 import yeohaenggasijo.tripshot.domain.scrapbook.Scrapbook;
@@ -20,10 +21,7 @@ import yeohaenggasijo.tripshot.dto.reel.ReelItemRes;
 import yeohaenggasijo.tripshot.dto.reel.ReelRes;
 import yeohaenggasijo.tripshot.dto.scrapbook.ScrapbookRes;
 import yeohaenggasijo.tripshot.dto.trip.req.TripCreateReq;
-import yeohaenggasijo.tripshot.dto.trip.res.OngoingTripRes;
-import yeohaenggasijo.tripshot.dto.trip.res.TripDetailRes;
-import yeohaenggasijo.tripshot.dto.trip.res.TripMediaRes;
-import yeohaenggasijo.tripshot.dto.trip.res.TripRes;
+import yeohaenggasijo.tripshot.dto.trip.res.*;
 import yeohaenggasijo.tripshot.exception.BadRequestException;
 import yeohaenggasijo.tripshot.repository.*;
 import yeohaenggasijo.tripshot.security.CurrentUserProvider;
@@ -184,6 +182,15 @@ public class TripService {
         return OngoingTripRes.from(dataList);
 
 
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlaceRes> getAllPlaces() {
+        List<Place> places = placeRepository.findAll(); // 필요하면 Sort 추가 가능
+
+        return places.stream()
+                .map(PlaceRes::from)
+                .toList();
     }
 
     /* ---------- 아래는 DTO 매핑 헬퍼들 ---------- */
