@@ -8,11 +8,13 @@ import yeohaenggasijo.tripshot.domain.user.User;
 import yeohaenggasijo.tripshot.dto.ApiResponse;
 import yeohaenggasijo.tripshot.dto.reel.ReelStatusRes;
 import yeohaenggasijo.tripshot.dto.trip.req.TripCreateReq;
+import yeohaenggasijo.tripshot.dto.trip.req.TripShareAlbumReq;
 import yeohaenggasijo.tripshot.dto.trip.res.*;
 import yeohaenggasijo.tripshot.security.CurrentUserProvider;
 import yeohaenggasijo.tripshot.service.ShortReelService;
 import yeohaenggasijo.tripshot.service.TripService;
 import yeohaenggasijo.tripshot.service.UserService;
+
 
 import java.io.IOException;
 import java.net.URI;
@@ -82,6 +84,7 @@ public class TripController {
                 new ApiResponse<>(true, 200, "OK", places)
         );
     }
+
 
 
 }

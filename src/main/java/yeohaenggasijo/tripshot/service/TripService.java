@@ -24,16 +24,20 @@ import yeohaenggasijo.tripshot.dto.reel.ReelItemRes;
 import yeohaenggasijo.tripshot.dto.reel.ReelRes;
 import yeohaenggasijo.tripshot.dto.scrapbook.ScrapbookRes;
 import yeohaenggasijo.tripshot.dto.trip.req.TripCreateReq;
+import yeohaenggasijo.tripshot.dto.trip.req.TripShareAlbumReq;
 import yeohaenggasijo.tripshot.dto.trip.res.*;
 import yeohaenggasijo.tripshot.exception.BadRequestException;
 import yeohaenggasijo.tripshot.repository.*;
 import yeohaenggasijo.tripshot.security.CurrentUserProvider;
+
+
 
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -179,6 +183,7 @@ public class TripService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 여행의 앨범을 찾을 수 없습니다."));
 
         album.setIsShared(req.isShared());
+    }
     @Transactional(readOnly = true)
     public OngoingTripRes isActiveTrip() {
         Long loggedInUserId = currentUserProvider.requireUserId();
@@ -227,12 +232,12 @@ public class TripService {
         );
     }
 
-    private ReelRes toReelRes(ShortReel r) {
-        return new ReelRes(
-                toMediaAssetRes(r.getOutputMedia()),
-                r.getTitle(),
-                r.getRenderStatus()
-        );
+    private ReelRes toReelRes(ShortReel r){
+            return new ReelRes(
+                    toMediaAssetRes(r.getOutputMedia()),
+                    r.getTitle(),
+                    r.getRenderStatus()
+            );
     }
 
     private ReelItemRes toReelItemRes(ShortReelItem it) {
