@@ -109,6 +109,63 @@ public class WebPushController {
         }
     }
 
+    @GetMapping("/settings")
+    public ResponseEntity<?> getNotificationSettings(
+            @RequestHeader(value = "X-User-Id", defaultValue = "1") Long currentUserId) {
+
+        Optional<Long> loggedInUser = currentUserProvider.getUserId();
+        if (loggedInUser.isPresent()) {
+            currentUserId = loggedInUser.get();
+        }
+
+        try {
+            Optional<NotificationSetting> settingOpt =
+                    notificationSettingRepository.findById(currentUserId);
+
+            if (settingOpt.isEmpty()) {
+                return ResponseEntity.ok(Map.of(
+                        "isSuccess", true,
+                        "result", Map.of(
+                                "timesPerDay", 0,
+                                "timezone", List.of()
+                        )
+                ));
+            }
+
+            NotificationSetting setting = settingOpt.get();
+
+            // timezone JSON 파싱
+            List<Integer> timezone;
+            try {
+                timezone = objectMapper.readValue(
+                        setting.getTimezone(),
+                        new com.fasterxml.jackson.core.type.TypeReference<List<Integer>>() {}
+                );
+            } catch (Exception e) {
+                timezone = List.of(12, 17); // 기본값
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "isSuccess", true,
+                    "result", Map.of(
+                            "timesPerDay", setting.getTimesPerDay(),
+                            "timezone", timezone
+                    )
+            ));
+
+        } catch (Exception e) {
+            System.err.println("설정 조회 중 에러: " + e.getMessage());
+            e.printStackTrace();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                            "isSuccess", false,
+                            "message", e.getMessage(),
+                            "result", null
+                    ));
+        }
+    }
+
     @PostMapping("/settings")
     @Transactional
     public ResponseEntity<?> updateNotificationSettings(@RequestHeader(value = "X-User-Id", defaultValue = "1") Long currentUserId, @RequestBody NotificationSettingReq request) {
