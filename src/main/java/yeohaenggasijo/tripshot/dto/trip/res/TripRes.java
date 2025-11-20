@@ -35,7 +35,7 @@ public record TripRes(
                 null
         );
     }
-    public static TripRes from(
+    public static TripRes fromWithUserInfo(
             Trip t,
             List<String> participantNames,
             List<String> participantAvatarUrls,

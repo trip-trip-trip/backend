@@ -41,6 +41,160 @@ INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
 VALUES (13, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Jeju Island', 'REGION', 10, 33.4893, 126.4983);
 -- 제주도
 
+-- === 해외 장소 더미 데이터 확장 ===
+
+-- 일본 (Japan)
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (14, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Japan', 'COUNTRY', NULL, 36.2048, 138.2529);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (15, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Tokyo', 'CITY', 14, 35.6895, 139.6917);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (16, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Shibuya Crossing', 'SPOT', 15, 35.6595, 139.7005);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (17, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Kyoto', 'CITY', 14, 35.0116, 135.7681);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (18, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Fushimi Inari Shrine', 'SPOT', 17, 34.9671, 135.7727);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (19, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Osaka', 'CITY', 14, 34.6937, 135.5023);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (20, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Dotonbori Canal', 'SPOT', 19, 34.6687, 135.5011);
+
+-- 미국 (United States)
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (21, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'United States', 'COUNTRY', NULL, 37.0902, -95.7129);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (22, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'New York City', 'CITY', 21, 40.7128, -74.0060);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (23, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Times Square', 'SPOT', 22, 40.7580, -73.9855);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (24, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'San Francisco', 'CITY', 21, 37.7749, -122.4194);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (25, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Golden Gate Bridge', 'SPOT', 24, 37.8199, -122.4783);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (26, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Los Angeles', 'CITY', 21, 34.0522, -118.2437);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (27, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Santa Monica Pier', 'SPOT', 26, 34.0094, -118.4973);
+
+-- 프랑스 (France)
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (28, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'France', 'COUNTRY', NULL, 46.2276, 2.2137);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (29, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Paris', 'CITY', 28, 48.8566, 2.3522);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (30, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Eiffel Tower', 'SPOT', 29, 48.8584, 2.2945);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (31, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Louvre Museum', 'SPOT', 29, 48.8606, 2.3376);
+
+-- 영국 (United Kingdom)
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (32, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'United Kingdom', 'COUNTRY', NULL, 55.3781, -3.4360);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (33, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'London', 'CITY', 32, 51.5074, -0.1278);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (34, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Big Ben', 'SPOT', 33, 51.5007, -0.1246);
+
+-- 이탈리아 (Italy)
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (35, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Italy', 'COUNTRY', NULL, 41.8719, 12.5674);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (36, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Rome', 'CITY', 35, 41.9028, 12.4964);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (37, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Colosseum', 'SPOT', 36, 41.8902, 12.4922);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (38, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Venice', 'CITY', 35, 45.4408, 12.3155);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (39, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Piazza San Marco', 'SPOT', 38, 45.4340, 12.3380);
+
+-- 스페인 (Spain)
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (40, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Spain', 'COUNTRY', NULL, 40.4637, -3.7492);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (41, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Barcelona', 'CITY', 40, 41.3851, 2.1734);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (42, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Sagrada Familia', 'SPOT', 41, 41.4036, 2.1744);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (43, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Madrid', 'CITY', 40, 40.4168, -3.7038);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (44, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Plaza Mayor', 'SPOT', 43, 40.4154, -3.7074);
+
+-- 태국 (Thailand)
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (45, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Thailand', 'COUNTRY', NULL, 15.8700, 100.9925);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (46, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Bangkok', 'CITY', 45, 13.7563, 100.5018);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (47, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Grand Palace', 'SPOT', 46, 13.7500, 100.4913);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (48, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Phuket Island', 'REGION', 45, 7.9519, 98.3381);
+
+-- 베트남 (Vietnam)
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (49, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Vietnam', 'COUNTRY', NULL, 14.0583, 108.2772);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (50, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Hanoi', 'CITY', 49, 21.0278, 105.8342);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (51, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Hoan Kiem Lake', 'SPOT', 50, 21.0285, 105.8542);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (52, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Ho Chi Minh City', 'CITY', 49, 10.8231, 106.6297);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (53, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Ben Thanh Market', 'SPOT', 52, 10.7723, 106.6984);
+
+-- 호주 (Australia)
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (54, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Australia', 'COUNTRY', NULL, -25.2744, 133.7751);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (55, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Sydney', 'CITY', 54, -33.8688, 151.2093);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (56, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Sydney Opera House', 'SPOT', 55, -33.8568, 151.2153);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (57, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Melbourne', 'CITY', 54, -37.8136, 144.9631);
+
+-- 캐나다 (Canada)
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (58, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Canada', 'COUNTRY', NULL, 56.1304, -106.3468);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (59, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Vancouver', 'CITY', 58, 49.2827, -123.1207);
+
+INSERT INTO places (id, created_at, updated_at, name, type, parent_id, lat, lng)
+VALUES (60, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 'Stanley Park', 'SPOT', 59, 49.3043, -123.1443);
+
+
 
 -- ** 3. 여행 (TRIPS) 더미 데이터 **
 -- ID는 10부터 시작.
