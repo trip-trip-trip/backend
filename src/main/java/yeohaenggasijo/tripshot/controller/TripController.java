@@ -8,6 +8,7 @@ import yeohaenggasijo.tripshot.domain.user.User;
 import yeohaenggasijo.tripshot.dto.ApiResponse;
 import yeohaenggasijo.tripshot.dto.reel.ReelStatusRes;
 import yeohaenggasijo.tripshot.dto.trip.req.TripCreateReq;
+import yeohaenggasijo.tripshot.dto.trip.req.TripShareAlbumReq;
 import yeohaenggasijo.tripshot.dto.trip.res.TripDetailRes;
 import yeohaenggasijo.tripshot.dto.trip.res.TripMediaRes;
 import yeohaenggasijo.tripshot.dto.trip.res.TripRes;
@@ -58,6 +59,19 @@ public class TripController {
     public ResponseEntity<ApiResponse<ReelStatusRes>> reel(@PathVariable Long id) throws IOException {
         return ResponseEntity.ok(ApiResponse.ok(shortReelService.getOrQueueWhenEnded(id)));
     }
+
+    @PatchMapping("/share_album")
+    public ResponseEntity<ApiResponse<Void>> updateShareAlbum(
+            @RequestBody TripShareAlbumReq req
+    ) {
+        Long uid = currentUser.requireUserId();
+        tripService.updateShareAlbum(uid, req);
+
+        return ResponseEntity.ok(
+                ApiResponse.of(true, 200, "공유 상태가 변경되었습니다.", null)
+        );
+    }
+
 
 
 }
