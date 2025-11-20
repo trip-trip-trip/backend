@@ -6,7 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import yeohaenggasijo.tripshot.domain.common.*;
+import yeohaenggasijo.tripshot.domain.album.Album;
+import yeohaenggasijo.tripshot.domain.common.ContentType;
+import yeohaenggasijo.tripshot.domain.common.TripStatus;
+import yeohaenggasijo.tripshot.domain.common.TripVisibility;
 import yeohaenggasijo.tripshot.domain.media.MediaAsset;
 import yeohaenggasijo.tripshot.domain.place.Place;
 import yeohaenggasijo.tripshot.domain.reel.ShortReel;
@@ -31,11 +34,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class TripService {
+
     private final TripRepository tripRepository;
     private final UserRepository userRepository;
     private final TripInvitationRepository tripInvitationRepository;
@@ -46,23 +49,27 @@ public class TripService {
     private final ScrapbookRepository scrapbookRepository;
     private final PlaceRepository placeRepository;
     private final TripParticipantRepository tripParticipantRepository;
+    private final AlbumRepository albumRepository;
+
     private static final Logger logger = LoggerFactory.getLogger(TripService.class);
     private final CurrentUserProvider currentUserProvider;
 
+    /* ---------- 여행 생성 ---------- */
 
     @Transactional
     public Trip create(Long uid, TripCreateReq req) {
         User owner = userRepository.findById(uid)
-                .orElseThrow(()-> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
         LocalDate today = LocalDate.now(clock);
         if (req.endDate().isBefore(today)) {
             throw new BadRequestException("End date already passed");
         }
+
         TripStatus status = req.startDate().isAfter(today)
                 ? TripStatus.UPCOMING
                 : TripStatus.ACTIVE;
-//        boolean hasInvitees = req.inviteeUserIds() != null && !req.inviteeUserIds().isEmpty();
-//        TripVisibility visibility = hasInvitees ? TripVisibility.FRIENDS : TripVisibility.PRIVATE;
+
         Trip trip = Trip.builder()
                 .owner(owner)
                 .title(req.title())
@@ -71,55 +78,46 @@ public class TripService {
                 .endDate(req.endDate())
                 .visibility(TripVisibility.FRIENDS)
                 .status(status)
-                .place(placeRepository.findById(req.placeId()).orElseThrow(()-> new EntityNotFoundException("Place not found")))
+                .place(placeRepository.findById(req.placeId())
+                        .orElseThrow(() -> new EntityNotFoundException("Place not found")))
                 .build();
+
         tripRepository.save(trip);
-//        if (hasInvitees) {
-//            for (Long inviteeId: req.inviteeUserIds()) {
-//                if (inviteeId.equals(uid)) continue;
-//                User invitee = userRepository.findById(inviteeId)
-//                        .orElseThrow(()-> new IllegalArgumentException("User not found"));
-//                TripInvitation inv = TripInvitation.builder()
-//                        .trip(trip)
-//                        .inviter(owner)
-//                        .invitee(invitee)
-//                        .status(InvitationStatus.PENDING)
-//                        .build();
-//                tripInvitationRepository.save(inv);
-//            }
-//        }
         return trip;
     }
+
+    /* ---------- 내 여행 목록 ---------- */
+
     @Transactional
     public List<TripDetailRes> myTrips(Long ownerId) {
-
         List<Trip> trips = tripRepository.findByOwner_Id(ownerId);
-        //        List<TripMediaRes> tripMediaResList = trips.stream().map(trip -> getContents(trip.getId())).toList();
-//        List <TripDetailRes tripDetailResList = tripResList.stream().map(res-> new TripDetailRes(res, ))
-        return trips.stream().map(trip-> new TripDetailRes(getById(trip.getId()), getContents(trip.getId()))).toList();
+        return trips.stream()
+                .map(trip -> new TripDetailRes(
+                        getById(trip.getId()),
+                        getContents(trip.getId()))
+                )
+                .toList();
     }
+
+    /* ---------- 단일 여행 정보 ---------- */
 
     @Transactional(readOnly = true)
     public TripRes getById(Long tripId) {
-        // 1) Trip 조회
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new EntityNotFoundException("no trip"));
 
-        // 2) 참가자 조회
         List<TripParticipant> participants =
                 tripParticipantRepository.findByTrip_Id(tripId);
-        logger.info(participants.size() + " participants found");
+        logger.info("{} participants found", participants.size());
         logger.info("participants: {}", participants);
 
-        // 3) 이름 / 프사 / 태그 추출
         List<String> names = new ArrayList<>();
         List<String> profileImgs = new ArrayList<>();
         List<String> tags = new ArrayList<>();
 
         for (TripParticipant tp : participants) {
             User u = tp.getUser();
-            // User 필드 이름은 실제 네 코드에 맞춰서 사용 (username / displayName 등)
-            names.add(u.getUsername());      // or getName()
+            names.add(u.getUsername());
             profileImgs.add(u.getAvatarUrl());
             tags.add(u.getTag());
         }
@@ -127,22 +125,22 @@ public class TripService {
         // 4) TripRes 조립해서 반환
         return TripRes.fromWithUserInfo(trip, names, profileImgs, tags);
     }
+
+    /* ---------- 여행에 속한 미디어(사진/스크랩북/릴) ---------- */
+
     @Transactional(readOnly = true)
     public TripMediaRes getContents(Long tripId) {
-        // 1) 사진 목록 (이미 Repository 메서드가 촬영시각 순으로 반환)
         List<PhotoRes> photos = mediaAssetRepository
                 .findByTrip_IdAndContentTypeOrderByTakenAt(tripId, ContentType.PHOTO)
                 .stream()
                 .map(this::toPhotoRes)
                 .toList();
 
-        // 2) 스크랩북 목록
         List<ScrapbookRes> scrapbooks = scrapbookRepository.findByTrip_Id(tripId)
                 .stream()
                 .map(this::toScrapbookRes)
                 .toList();
 
-        // 3) 쇼트릴 + 아이템들
         ShortReel reel = shortReelRepository.findByTrip_Id(tripId).orElse(null);
         ReelRes reelRes = (reel == null) ? null : toReelRes(reel);
 
@@ -150,7 +148,6 @@ public class TripService {
                 ? List.of()
                 : shortReelItemRepository.findByReel_Id(reel.getId())
                 .stream()
-                // position 오름차순(널이면 뒤로)
                 .sorted(Comparator.comparing(
                         ShortReelItem::getPosition,
                         Comparator.nullsLast(Integer::compareTo)))
@@ -160,6 +157,28 @@ public class TripService {
         return new TripMediaRes(photos, scrapbooks, reelItems, reelRes);
     }
 
+    /* ---------- 공유 앨범 공개 여부 토글 ---------- */
+
+    @Transactional
+    public void updateShareAlbum(Long userId, TripShareAlbumReq req) {
+        if (req.tripId() == null) {
+            throw new IllegalArgumentException("tripId is required");
+        }
+        if (req.isShared() == null) {
+            throw new IllegalArgumentException("isShared is required");
+        }
+
+        Trip trip = tripRepository.findById(req.tripId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 여행입니다."));
+
+        if (!trip.getOwner().getId().equals(userId)) {
+            throw new IllegalArgumentException("이 여행에 대한 수정 권한이 없습니다.");
+        }
+
+        Album album = albumRepository.findByTrip_IdAndOwner_Id(trip.getId(), userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 여행의 앨범을 찾을 수 없습니다."));
+
+        album.setIsShared(req.isShared());
     @Transactional(readOnly = true)
     public OngoingTripRes isActiveTrip() {
         Long loggedInUserId = currentUserProvider.requireUserId();
@@ -242,12 +261,12 @@ public class TripService {
                 m.getComment(),
                 m.getUrl(),
                 m.getUploader().getId(),
-                m.getUploader().getUsername(),                  // 도메인에 존재하는 'uploader' 엔티티 그대로 반환
+                m.getUploader().getUsername(),
                 m.getWidth(),
                 m.getHeight(),
                 m.getDurationSec(),
                 m.getTakenAt(),
-                m.getIsSharedInAlbum(),              // Boolean 필드 네이밍에 따라 getIsSharedInAlbum()/isSharedInAlbum() 중 하나일 수 있음
+                m.getIsSharedInAlbum(),
                 m.getExpiration()
         );
     }

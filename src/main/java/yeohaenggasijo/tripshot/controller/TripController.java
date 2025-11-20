@@ -57,6 +57,19 @@ public class TripController {
         return ResponseEntity.ok(ApiResponse.ok(shortReelService.getOrQueueWhenEnded(id)));
     }
 
+    @PatchMapping("/share_album")
+    public ResponseEntity<ApiResponse<Void>> updateShareAlbum(
+            @RequestBody TripShareAlbumReq req
+    ) {
+        Long uid = currentUser.requireUserId();
+        tripService.updateShareAlbum(uid, req);
+
+        return ResponseEntity.ok(
+                ApiResponse.of(true, 200, "공유 상태가 변경되었습니다.", null)
+        );
+    }
+
+
     @GetMapping("/isActiveTrips")
     public ResponseEntity<ApiResponse<OngoingTripRes>> isTraveling(){
         return ResponseEntity.ok(ApiResponse.ok(tripService.isActiveTrip()));
