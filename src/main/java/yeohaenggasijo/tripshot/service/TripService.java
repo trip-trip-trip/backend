@@ -164,26 +164,40 @@ public class TripService {
     /* ---------- 공유 앨범 공개 여부 토글 ---------- */
 
     @Transactional
-    public void updateShareAlbum(Long userId, TripShareAlbumReq req) {
-        if (req.tripId() == null) {
-            throw new IllegalArgumentException("tripId is required");
-        }
-        if (req.isShared() == null) {
-            throw new IllegalArgumentException("isShared is required");
-        }
+    public void toggleSharedMedias(Long userId, Long tripId, List<Long> toggleIds) {
 
-        Trip trip = tripRepository.findById(req.tripId())
+        // 1) trip 검증
+        Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 여행입니다."));
 
+        // 2) owner 권한 검증
         if (!trip.getOwner().getId().equals(userId)) {
             throw new IllegalArgumentException("이 여행에 대한 수정 권한이 없습니다.");
         }
 
-        Album album = albumRepository.findByTrip_IdAndOwner_Id(trip.getId(), userId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 여행의 앨범을 찾을 수 없습니다."));
+        // 3) trip의 모든 MediaAsset 조회
+        List<MediaAsset> assets = mediaAssetRepository.findByTrip_Id(tripId);
 
-        album.setIsShared(req.isShared());
+        // 4) toggleIds 중 trip에 속하지 않는 media가 있는지 검증
+        for (Long id : toggleIds) {
+            boolean exists = assets.stream().anyMatch(a -> a.getId().equals(id));
+            if (!exists) {
+                throw new IllegalArgumentException("요청한 미디어가 해당 여행에 포함되지 않습니다. id=" + id);
+            }
+        }
+
+        // 5) 토글 처리
+        for (MediaAsset asset : assets) {
+            if (toggleIds.contains(asset.getId())) {
+                // ON → OFF, OFF → ON
+                boolean current = Boolean.TRUE.equals(asset.getIsSharedInAlbum());
+                asset.setIsSharedInAlbum(!current);
+            }
+        }
     }
+
+
+
     @Transactional(readOnly = true)
     public OngoingTripRes isActiveTrip() {
         Long loggedInUserId = currentUserProvider.requireUserId();

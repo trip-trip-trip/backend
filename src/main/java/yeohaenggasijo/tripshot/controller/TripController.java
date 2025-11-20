@@ -9,6 +9,7 @@ import yeohaenggasijo.tripshot.dto.ApiResponse;
 import yeohaenggasijo.tripshot.dto.reel.ReelStatusRes;
 import yeohaenggasijo.tripshot.dto.trip.req.TripCreateReq;
 import yeohaenggasijo.tripshot.dto.trip.req.TripShareAlbumReq;
+import yeohaenggasijo.tripshot.dto.trip.req.TripToggleShareMediaReq;
 import yeohaenggasijo.tripshot.dto.trip.res.*;
 import yeohaenggasijo.tripshot.security.CurrentUserProvider;
 import yeohaenggasijo.tripshot.service.ShortReelService;
@@ -59,17 +60,6 @@ public class TripController {
         return ResponseEntity.ok(ApiResponse.ok(shortReelService.getOrQueueWhenEnded(id)));
     }
 
-    @PatchMapping("/share_album")
-    public ResponseEntity<ApiResponse<Void>> updateShareAlbum(
-            @RequestBody TripShareAlbumReq req
-    ) {
-        Long uid = currentUser.requireUserId();
-        tripService.updateShareAlbum(uid, req);
-
-        return ResponseEntity.ok(
-                ApiResponse.of(true, 200, "공유 상태가 변경되었습니다.", null)
-        );
-    }
 
 
     @GetMapping("/isActiveTrips")
@@ -84,6 +74,20 @@ public class TripController {
                 new ApiResponse<>(true, 200, "OK", places)
         );
     }
+
+    @PatchMapping("/{tripId}/shared_media/toggle")
+    public ResponseEntity<ApiResponse<Void>> toggleSharedMedia(
+            @PathVariable Long tripId,
+            @RequestBody TripToggleShareMediaReq req
+    ) {
+        Long uid = currentUser.requireUserId();
+        tripService.toggleSharedMedias(uid, tripId, req.sharedMediaIds());
+
+        return ResponseEntity.ok(
+                ApiResponse.of(true, 200, "공유 상태가 변경되었습니다.", null)
+        );
+    }
+
 
 
 

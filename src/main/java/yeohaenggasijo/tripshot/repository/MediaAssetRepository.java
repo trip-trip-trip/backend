@@ -24,4 +24,6 @@ public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
 
 
     List<MediaAsset> findByTrip_IdAndContentTypeOrderByTakenAt(Long tripId, ContentType contentType);
+
+    List<MediaAsset> findByTrip_Id(Long tripId);
 }
