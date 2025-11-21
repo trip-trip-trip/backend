@@ -7,13 +7,12 @@ import yeohaenggasijo.tripshot.domain.trip.Trip;
 import yeohaenggasijo.tripshot.domain.user.User;
 import yeohaenggasijo.tripshot.dto.ApiResponse;
 import yeohaenggasijo.tripshot.dto.reel.ReelStatusRes;
-import yeohaenggasijo.tripshot.dto.trip.req.TripCreateReq;
-import yeohaenggasijo.tripshot.dto.trip.req.TripShareAlbumReq;
-import yeohaenggasijo.tripshot.dto.trip.req.TripToggleShareMediaReq;
 import yeohaenggasijo.tripshot.dto.trip.res.*;
+import yeohaenggasijo.tripshot.dto.trip.req.*;
 import yeohaenggasijo.tripshot.security.CurrentUserProvider;
 import yeohaenggasijo.tripshot.service.ShortReelService;
 import yeohaenggasijo.tripshot.service.TripService;
+import yeohaenggasijo.tripshot.service.TripInvitationService;
 import yeohaenggasijo.tripshot.service.UserService;
 
 
@@ -29,6 +28,7 @@ public class TripController {
     private final TripService tripService;
     private final CurrentUserProvider currentUser;
     private final ShortReelService shortReelService;
+    private final TripInvitationService tripInvitationService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<TripRes>> create(@RequestBody TripCreateReq req) {
@@ -86,6 +86,28 @@ public class TripController {
         return ResponseEntity.ok(
                 ApiResponse.of(true, 200, "공유 상태가 변경되었습니다.", null)
         );
+    }
+
+    // 친구 초대 보내기
+    @PostMapping("/{tripId}/invite")
+    public ResponseEntity<ApiResponse<TripInvitationListRes>> inviteFriends(
+            @PathVariable Long tripId,
+            @RequestBody TripInviteCreateReq req
+    ) {
+        Long uid = currentUser.requireUserId();
+        TripInvitationListRes result = tripInvitationService.sendInvitations(uid, tripId, req);
+        return ResponseEntity.ok(ApiResponse.ok(result));
+    }
+
+    // 초대 현황 조회
+    @GetMapping("/{tripId}/invite")
+    public ResponseEntity<ApiResponse<TripInvitationListRes>> getInvitations(
+            @PathVariable Long tripId,
+            @RequestParam(required = false) String direction
+    ) {
+        Long uid = currentUser.requireUserId();
+        TripInvitationListRes result = tripInvitationService.getTripInvitations(uid, tripId, direction);
+        return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
 
