@@ -105,26 +105,21 @@ public class MainPageService {
                 req.getVisibility()
         );
 
-        // PostMedia 목록 교체
-        // 기존 PostMedia 기록 모두 삭제
-        postMediaRepository.deleteAllByPostId(postId);
+        /// 미디어 정보 조회
+        List<PostMedia> postMediaList = postMediaRepository.findByPostIdIn(List.of(postId));
+        Set<Long> assetIds = postMediaList.stream()
+                .map(PostMedia::getObjectId)
+                .collect(Collectors.toSet());
+        List<MediaAsset> mediaAssetList = mediaAssetRepository.findMediaAssetDetailByIdIn(assetIds);
 
-        // 새로운 PostMedia 목록 저장 (createPost와 동일한 로직)
-        int position = 1;
-        for (MediaAttachmentReq mediaReq : req.getMedia()) {
-            PostMedia postMedia = PostMedia.builder()
-                    .post(post)
-                    .objectType(mediaReq.getObjectType())
-                    .objectId(mediaReq.getObjectId())
-                    .position(position++)
-                    .build();
-            postMediaRepository.save(postMedia);
-        }
+        Map<Long, MediaAsset> assetMap = mediaAssetList.stream()
+                .collect(Collectors.toMap(MediaAsset::getId, asset -> asset));
 
-        // 응답 DTO 생성 (수정 후이므로 통계 값 재계산 또는 0으로 반환)
-        // 수정 후의 응답이므로, PostRes를 반환
+        // 작성자 정보 변환
         AuthorRes authorRes = postMapper.toAuthorRes(post.getAuthor());
-        List<MediaRes> mediaResList = postMapper.toMediaResListForCreation(req.getMedia());
+
+        // 미디어 정보 변환
+        List<MediaRes> mediaResList = postMapper.toMediaResList(postMediaList, assetMap);
 
         return PostRes.builder()
                 .id(post.getId())
@@ -192,6 +187,7 @@ public class MainPageService {
         AuthorRes authorRes = postMapper.toAuthorRes(author);
 
         return CommentRes.builder()
+                .commentId(savedComment.getId())
                 .commenter(authorRes)
                 .comment(savedComment.getContent())
                 .createdAt(savedComment.getCreatedAt())
