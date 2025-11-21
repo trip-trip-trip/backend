@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findById(Long id);
+
     Optional<User> findByMobile(String mobile);
 
     /**
@@ -19,6 +20,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
             String usernameKeyword,
             String tagKeyword
     );
+
+    Optional<User> findByTag(String tag);
+
+    List<User> findByTagContainingIgnoreCase(String tag);
 
 
 }

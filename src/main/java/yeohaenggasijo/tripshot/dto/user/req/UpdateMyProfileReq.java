@@ -17,7 +17,6 @@ public class UpdateMyProfileReq {
 
     private String username;
     private String bio;
-    private String avatarUrl;
-    private String mobile;
+    private String tag;
     // TODO: 추후 프로필 공개 범위 등 추가 가능
 }

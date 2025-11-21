@@ -9,7 +9,6 @@ import lombok.*;
 @Entity
 @Table(name = "users",
        uniqueConstraints = {
-         @UniqueConstraint(name = "uk_users_username", columnNames = "username"),
          @UniqueConstraint(name = "uk_users_tag", columnNames = "tag")
        })
 public class User extends BaseEntity {
