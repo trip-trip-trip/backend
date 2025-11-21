@@ -3,6 +3,7 @@ package yeohaenggasijo.tripshot.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import yeohaenggasijo.tripshot.dto.ApiResponse;
 import yeohaenggasijo.tripshot.dto.trip.res.PostLocaListRes;
 import yeohaenggasijo.tripshot.dto.user.req.UpdateMyProfileReq;
@@ -39,10 +40,11 @@ public class UserController {
      */
     @PatchMapping("/me")
     public ResponseEntity<ApiResponse<MyProfileRes>> updateMyProfile(
-            @RequestBody UpdateMyProfileReq req
+            @RequestPart("file") MultipartFile file,
+            @RequestPart("data") UpdateMyProfileReq req
     ) {
         Long userId = currentUser.requireUserId();
-        MyProfileRes updated = userService.updateMyProfile(userId, req);
+        MyProfileRes updated = userService.updateMyProfile(userId, file, req);
         return ResponseEntity.ok(ApiResponse.ok(updated));
     }
 

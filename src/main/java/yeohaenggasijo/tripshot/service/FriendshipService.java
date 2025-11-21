@@ -63,7 +63,7 @@ public class FriendshipService {
     @Transactional(readOnly = true)
     public List<UserSearchRes> searchUsers(Long currentUserId, String keyword) {
         List<User> users = userRepository
-                .findByUsernameContainingIgnoreCaseOrTagContainingIgnoreCase(keyword, keyword);
+                .findByTagContainingIgnoreCase(keyword);
 
         return users.stream()
                 .filter(u -> !u.getId().equals(currentUserId)) // 자기 자신 제외

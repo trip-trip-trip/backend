@@ -21,6 +21,8 @@ import yeohaenggasijo.tripshot.repository.TripRepository;
 import yeohaenggasijo.tripshot.repository.UserRepository;
 import yeohaenggasijo.tripshot.security.CurrentUserProvider;
 import yeohaenggasijo.tripshot.service.storage.StorageUploader;
+import yeohaenggasijo.tripshot.util.FileExtension;
+
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -35,6 +37,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MediaAssetService {
 
+    private final Logger log = LoggerFactory.getLogger(MediaAssetService.class);
+    private final FileExtension fileExtension;
     private final MediaAssetRepository mediaAssetRepository;
     private final TripRepository tripRepository;
     private final UserRepository userRepository;
@@ -64,7 +68,7 @@ public class MediaAssetService {
 
         // objectKey 결정 (trips/{tripId}/{photo|video}/{uuid}.{ext})
         String original = Optional.ofNullable(file.getOriginalFilename()).orElse("");
-        String ext = guessExt(original, ctype, isVideo);
+        String ext = fileExtension.guessExt(original, ctype, isVideo);
         String key = "trips/%d/%s/%s.%s".formatted(
                 trip.getId(),
                 mediaKind.name().toLowerCase(),
@@ -143,22 +147,4 @@ public class MediaAssetService {
         }
     }
 
-    private String guessExt(String original, String contentType, boolean isVideo) {
-        String lower = original.toLowerCase();
-        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "jpg";
-        if (lower.endsWith(".png")) return "png";
-        if (lower.endsWith(".heic")) return "heic";
-        if (lower.endsWith(".mp4")) return "mp4";
-        if (lower.endsWith(".mov")) return "mov";
-
-        if (contentType != null) {
-            if (contentType.contains("jpeg")) return "jpg";
-            if (contentType.contains("png")) return "png";
-            if (contentType.contains("heic")) return "heic";
-            if (contentType.contains("mp4")) return "mp4";
-            if (contentType.contains("quicktime")) return "mov";
-        }
-        // 기본값
-        return isVideo ? "mp4" : "jpg";
-    }
 }
