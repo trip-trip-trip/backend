@@ -35,11 +35,28 @@ public class FriendshipController {
     /**
      * 받은 친구 요청 목록 조회
      * GET /friendships/requests
-     */
+
     @GetMapping("/requests")
     public ResponseEntity<ApiResponse<List<PendingFriendRequestRes>>> getPendingRequests() {
         Long userId = currentUser.requireUserId();
         List<PendingFriendRequestRes> res = friendshipService.getPendingRequests(userId);
+        return ResponseEntity.ok(ApiResponse.ok(res));
+    }*/
+
+    @GetMapping("/requests")
+    public ResponseEntity<ApiResponse<List<PendingFriendRequestRes>>> getPendingRequests(
+            @RequestParam(name = "type", defaultValue = "received") String type
+    ) {
+        Long userId = currentUser.requireUserId();
+        List<PendingFriendRequestRes> res;
+
+        String normalized = type.toLowerCase();
+        switch (normalized) {
+            case "received" -> res = friendshipService.getPendingRequests(userId);
+            case "sent" -> res = friendshipService.getSentPendingRequests(userId);
+            default -> throw new IllegalArgumentException("Invalid type: " + type);
+        }
+
         return ResponseEntity.ok(ApiResponse.ok(res));
     }
 
@@ -55,5 +72,17 @@ public class FriendshipController {
         Long userId = currentUser.requireUserId();
         FriendRequestStatusRes res = friendshipService.handleFriendRequest(userId, requestId, req);
         return ResponseEntity.ok(ApiResponse.ok(res));
+    }
+    /**
+     * 내가 보낸 친구 요청 취소
+     * DELETE /friendships/requests/{requestId}
+     */
+    @DeleteMapping("/requests/{requestId}")
+    public ResponseEntity<ApiResponse<Void>> cancelFriendRequest(
+            @PathVariable Long requestId
+    ) {
+        Long userId = currentUser.requireUserId();
+        friendshipService.cancelFriendRequest(userId, requestId);
+        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }

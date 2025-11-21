@@ -154,6 +154,25 @@ public class FriendshipService {
                 .toList();
     }
 
+    // ================== 4-1. 보낸 친구 요청 목록 ==================
+
+    @Transactional(readOnly = true)
+    public List<PendingFriendRequestRes> getSentPendingRequests(Long currentUserId) {
+        List<Friendship> list =
+                friendshipRepository.findByRequester_IdAndStatus(currentUserId, FriendshipStatus.PENDING);
+
+        return list.stream()
+                .map(f -> new PendingFriendRequestRes(
+                        f.getId(),
+                        f.getAddressee().getId(),        // here: the receiver is the "other" user
+                        f.getAddressee().getUsername(),
+                        f.getAddressee().getTag(),
+                        f.getAddressee().getAvatarUrl()
+                ))
+                .toList();
+    }
+
+
     // ================== 5. 친구 요청 수락/거절 ==================
 
     @Transactional
@@ -170,15 +189,39 @@ public class FriendshipService {
         }
 
         String action = req.action().toUpperCase();
+        String resultStatus;
 
         switch (action) {
-            case "ACCEPT" -> fr.setStatus(FriendshipStatus.ACCEPTED);
-            case "REJECT" -> fr.setStatus(FriendshipStatus.BLOCKED); // 필요하면 나중에 REJECTED enum 추가
+            case "ACCEPT" -> {
+                // accept: just update status
+                fr.setStatus(FriendshipStatus.ACCEPTED);
+                resultStatus = fr.getStatus().name();
+            }
+            case "REJECT" -> {
+                // reject: delete the pending request (acts like cancel)
+                friendshipRepository.delete(fr);
+                resultStatus = "REJECTED"; // logical status for client
+            }
             default -> throw new IllegalArgumentException("Invalid action: " + req.action());
         }
 
-        return new FriendRequestStatusRes(fr.getId(), fr.getStatus().name());
+        return new FriendRequestStatusRes(requestId, resultStatus);
     }
+    // ================== 5-1. 내가 보낸 친구 요청 취소 ==================
+
+    @Transactional
+    public void cancelFriendRequest(Long currentUserId, Long requestId) {
+        Friendship fr = friendshipRepository.findByIdAndRequester_Id(requestId, currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Friend request not found or not sent by current user."));
+
+        if (fr.getStatus() != FriendshipStatus.PENDING) {
+            throw new IllegalArgumentException("Friend request already processed.");
+        }
+
+        // Cancel by deleting the pending friendship
+        friendshipRepository.delete(fr);
+    }
+
     // ================== 6. 특정 유저 프로필 조회 ==================
 
     @Transactional(readOnly = true)
@@ -222,5 +265,27 @@ public class FriendshipService {
                 pendingSent,
                 pendingReceived
         );
+    }
+    // ================== 7. 친구 삭제(언프렌드) ==================
+
+    @Transactional
+    public void unfriend(Long currentUserId, Long friendUserId) {
+        if (currentUserId.equals(friendUserId)) {
+            throw new IllegalArgumentException("Cannot unfriend yourself.");
+        }
+
+        // try (currentUser -> friendUser)
+        Optional<Friendship> forward =
+                friendshipRepository.findByStatusAndRequester_IdAndAddressee_Id(
+                        FriendshipStatus.ACCEPTED, currentUserId, friendUserId
+                );
+
+        Friendship fr = forward.orElseGet(() ->
+                friendshipRepository.findByStatusAndRequester_IdAndAddressee_Id(
+                        FriendshipStatus.ACCEPTED, friendUserId, currentUserId
+                ).orElseThrow(() -> new IllegalArgumentException("Friendship not found."))
+        );
+
+        friendshipRepository.delete(fr);
     }
 }

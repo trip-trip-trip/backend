@@ -98,4 +98,14 @@ public class UserController {
         UserProfileRes profile = friendshipService.getUserProfile(currentUserId, profileUserId);
         return ResponseEntity.ok(ApiResponse.ok(profile));
     }
+    // 예시: UserController 내부
+    @DeleteMapping("/friendships/{friendUserId}")
+    public ResponseEntity<ApiResponse<Void>> unfriend(
+            @PathVariable Long friendUserId
+    ) {
+        Long userId = currentUser.requireUserId();
+        friendshipService.unfriend(userId, friendUserId);
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
 }

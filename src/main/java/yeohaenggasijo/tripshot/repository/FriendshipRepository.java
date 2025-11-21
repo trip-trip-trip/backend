@@ -71,6 +71,18 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
      * 두 유저 사이의 관계 한 건 조회 (status 무관)
      */
     Optional<Friendship> findByRequester_IdAndAddressee_Id(Long requesterId, Long addresseeId);
+    /**
+     * 내가 보낸 요청인지 확인하기 위한 조회 (취소용)
+     */
+    Optional<Friendship> findByIdAndRequester_Id(Long id, Long requesterId);
+    /**
+     * 특정 status 의 친구 관계 한 건 조회 (언프렌드용)
+     */
+    Optional<Friendship> findByStatusAndRequester_IdAndAddressee_Id(
+            FriendshipStatus status,
+            Long requesterId,
+            Long addresseeId
+    );
 
 
 }
