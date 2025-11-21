@@ -12,12 +12,14 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 public class CommentRes {
+    private  final Long commentId;
     private final AuthorRes commenter;
     private final String comment;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
     private final LocalDateTime createdAt;
 
     public CommentRes(Comment comment) {
+        this.commentId = comment.getId();
         // 1. 작성자(User) 엔티티를 AuthorRes DTO로 변환
         this.commenter = new AuthorRes(comment.getAuthor());
 
