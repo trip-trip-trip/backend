@@ -43,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers("/login/**", "/logout").permitAll()
                         .requestMatchers("/posts/**").permitAll()
                         .requestMatchers("/push/**").permitAll()
+                        .requestMatchers("/trips/**").permitAll()
                         .requestMatchers("/login/signup/verify-and-complete").hasRole("SIGNUP")
                         .anyRequest().authenticated());
         http.addFilterBefore(jwtAuthFilter, AnonymousAuthenticationFilter.class);
