@@ -18,7 +18,9 @@ public record TripRes(
         LocalDate endDate,
         List<String> inviteesProfileImgList,
         List<String> inviteesNameList,
-        List<String> inviteesTagList
+        List<String> inviteesTagList,
+        Long placeId,
+        String placeName
 ) {
     public static TripRes from(Trip t){
         return new TripRes(
@@ -32,7 +34,9 @@ public record TripRes(
                 t.getEndDate(),
                 null,
                 null,
-                null
+                null,
+                t.getPlace().getId(),
+                t.getPlace().getName()
         );
     }
     public static TripRes fromWithUserInfo(
@@ -52,7 +56,10 @@ public record TripRes(
                 t.getEndDate(),
                 participantNames,
                 participantAvatarUrls,
-                participantTags
+                participantTags,
+                t.getPlace().getId(),
+                t.getPlace().getName()
+
         );
     }
 }
