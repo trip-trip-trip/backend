@@ -2,6 +2,7 @@ package yeohaenggasijo.tripshot.dto.trip.res;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
+import yeohaenggasijo.tripshot.domain.common.AttachmentType;
 
 import java.math.BigDecimal;
 
@@ -13,5 +14,11 @@ public class PostsLocaRes {
     private final Long postId;
     private final BigDecimal lat;
     private final BigDecimal lng;
+
+    @JsonProperty("thumbnail_type")
+    private final AttachmentType thumbnailType;
+
+    @JsonProperty("thumbnail_url")
+    private final String thumbnailUrl;
 
 }

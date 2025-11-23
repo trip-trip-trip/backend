@@ -57,6 +57,17 @@ public class TripController {
         return ResponseEntity.ok(ApiResponse.ok(new TripDetailRes(data, mediaData, isOwner)));
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<TripRes>> update(
+            @PathVariable Long id,
+            @RequestBody TripUpdateReq req
+
+    ) {
+        Long uid = currentUser.requireUserId();
+        Trip updated = tripService.update(uid, id, req);
+        return ResponseEntity.ok(ApiResponse.ok(TripRes.from(updated)));
+    }
+
     @GetMapping("/{id}/reel")
     public ResponseEntity<ApiResponse<ReelStatusRes>> reel(@PathVariable Long id) throws IOException {
         return ResponseEntity.ok(ApiResponse.ok(shortReelService.getOrQueueWhenEnded(id)));
