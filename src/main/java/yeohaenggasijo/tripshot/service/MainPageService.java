@@ -293,9 +293,14 @@ public class MainPageService {
         // Post 엔티티를 거치지 않고 바로 PostsLocaRes DTO 리스트를 가져옴
         List<PostsLocaRes> postLocaList = postRepository.findAllPostLocaByAuthorId(currentUserId);
 
+        // 장소 목록 조회
+        List<PlaceTabRes> placeTabs = postRepository.findDistinctPlacesByAuthorId(currentUserId);
+
+
         // 3. PostLocaListRes DTO로 감싸서 반환
         return PostLocaListRes.builder()
                 .posts(postLocaList)
+                .placeTabs(placeTabs)
                 .build();
 
     }
