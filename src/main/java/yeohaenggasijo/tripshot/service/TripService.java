@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import yeohaenggasijo.tripshot.domain.album.Album;
 import yeohaenggasijo.tripshot.domain.common.ContentType;
+import yeohaenggasijo.tripshot.domain.common.TripParticipantRole;
 import yeohaenggasijo.tripshot.domain.common.TripStatus;
 import yeohaenggasijo.tripshot.domain.common.TripVisibility;
 import yeohaenggasijo.tripshot.domain.media.MediaAsset;
@@ -30,7 +31,6 @@ import yeohaenggasijo.tripshot.dto.trip.res.*;
 import yeohaenggasijo.tripshot.exception.BadRequestException;
 import yeohaenggasijo.tripshot.repository.*;
 import yeohaenggasijo.tripshot.security.CurrentUserProvider;
-
 
 
 import java.time.Clock;
@@ -88,6 +88,14 @@ public class TripService {
                 .build();
 
         tripRepository.save(trip);
+
+        tripParticipantRepository.save(
+                TripParticipant.builder()
+                        .trip(trip)
+                        .user(owner)
+                        .role(TripParticipantRole.OWNER)
+                        .build()
+        );
         return trip;
     }
 
@@ -151,11 +159,14 @@ public class TripService {
 
     @Transactional
     public List<TripDetailRes> myTrips(Long ownerId) {
-        List<Trip> trips = tripRepository.findByOwner_Id(ownerId);
-        return trips.stream()
-                .map(trip -> new TripDetailRes(
-                        getById(trip.getId()),
-                        getContents(trip.getId()))
+//        List<Trip> trips = tripRepository.findByOwner_Id(ownerId);
+        List<TripParticipant> tripParticipantList = tripParticipantRepository.findByUser_Id(ownerId);
+        return tripParticipantList.stream()
+                .map(tripParticipant -> new TripDetailRes(
+                                getById(tripParticipant.getTrip().getId()),
+                                getContents(tripParticipant.getTrip().getId()),
+                                tripParticipant.getRole() == TripParticipantRole.OWNER
+                        )
                 )
                 .toList();
     }
@@ -254,11 +265,10 @@ public class TripService {
     }
 
 
-
     @Transactional(readOnly = true)
     public OngoingTripRes isActiveTrip() {
         Long loggedInUserId = currentUserProvider.requireUserId();
-        List<Trip> ongoingTrip = tripRepository.findActiveTrips(loggedInUserId,LocalDate.now());
+        List<Trip> ongoingTrip = tripRepository.findActiveTrips(loggedInUserId, LocalDate.now());
         if (ongoingTrip.isEmpty()) {
             return OngoingTripRes.empty();
         }
@@ -303,12 +313,12 @@ public class TripService {
         );
     }
 
-    private ReelRes toReelRes(ShortReel r){
-            return new ReelRes(
-                    toMediaAssetRes(r.getOutputMedia()),
-                    r.getTitle(),
-                    r.getRenderStatus()
-            );
+    private ReelRes toReelRes(ShortReel r) {
+        return new ReelRes(
+                toMediaAssetRes(r.getOutputMedia()),
+                r.getTitle(),
+                r.getRenderStatus()
+        );
     }
 
     private ReelItemRes toReelItemRes(ShortReelItem it) {

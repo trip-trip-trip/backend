@@ -29,6 +29,8 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostRepositor
             """) // 특정 유저 ID로 필터링
     List<PostsLocaRes> findAllPostLocaByAuthorId(@Param("userId") Long userId);
 
+    Integer countPostByAuthor_Id(Long authorId);
+
     // 추가: 고유한 장소 목록 (탭용)
     @Query("""
             SELECT new yeohaenggasijo.tripshot.dto.trip.res.PlaceTabRes(
