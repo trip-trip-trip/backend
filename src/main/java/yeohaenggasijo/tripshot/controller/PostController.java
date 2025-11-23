@@ -46,6 +46,7 @@ public class PostController {
             return ApiResponse.error(HttpStatus.NOT_FOUND.value(), e.getMessage());
         } catch (Exception e) {
             // 그 외 서버 오류: 500 Internal Server Error
+            e.printStackTrace();
             return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "게시글 작성 중 알 수 없는 오류가 발생했습니다.");
         }
     }
@@ -74,6 +75,7 @@ public class PostController {
             return ApiResponse.error(HttpStatus.FORBIDDEN.value(), e.getMessage());
         } catch (Exception e) {
             // 그 외 서버 오류: 500 Internal Server Error
+            e.printStackTrace();
             return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "게시글 작성 중 알 수 없는 오류가 발생했습니다.");
         }
 
@@ -102,6 +104,7 @@ public class PostController {
             return ApiResponse.error(HttpStatus.FORBIDDEN.value(), e.getMessage());
         } catch (Exception e) {
             // 그 외 서버 오류: 500 Internal Server Error
+            e.printStackTrace();
             return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "게시글 삭제 중 알 수 없는 오류가 발생했습니다.");
         }
 
@@ -160,6 +163,7 @@ public class PostController {
             return ApiResponse.error(HttpStatus.FORBIDDEN.value(), e.getMessage());
         } catch (Exception e) {
             // 그 외 서버 오류: 500 Internal Server Error
+            e.printStackTrace();
             return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "댓글 작성 중 알 수 없는 오류가 발생했습니다.");
         }
     }
@@ -188,6 +192,7 @@ public class PostController {
             return ApiResponse.error(HttpStatus.FORBIDDEN.value(), e.getMessage());
         } catch (Exception e) {
             // 그 외 서버 오류: 500 Internal Server Error
+            e.printStackTrace();
             return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "댓글 삭제 중 알 수 없는 오류가 발생했습니다.");
         }
     }
@@ -215,6 +220,7 @@ public class PostController {
             return ApiResponse.error(HttpStatus.FORBIDDEN.value(), e.getMessage());
         } catch (Exception e) {
             // 그 외 서버 오류: 500 Internal Server Error
+            e.printStackTrace();
             return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "게시글 댓글 조회 중 알 수 없는 오류가 발생했습니다.");
         }
     }
@@ -241,6 +247,7 @@ public class PostController {
             return ApiResponse.error(HttpStatus.FORBIDDEN.value(), e.getMessage());
         } catch (Exception e) {
             // 그 외 서버 오류: 500 Internal Server Error
+            e.printStackTrace();
             return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "게시글 위치 조회 중 알 수 없는 오류가 발생했습니다.");
         }
     }
