@@ -157,12 +157,12 @@ public class FriendshipService {
     // ================== 4-1. 보낸 친구 요청 목록 ==================
 
     @Transactional(readOnly = true)
-    public List<PendingFriendRequestRes> getSentPendingRequests(Long currentUserId) {
+    public List<PendingSentFriendRequestRes> getSentPendingRequests(Long currentUserId) {
         List<Friendship> list =
                 friendshipRepository.findByRequester_IdAndStatus(currentUserId, FriendshipStatus.PENDING);
 
         return list.stream()
-                .map(f -> new PendingFriendRequestRes(
+                .map(f -> new PendingSentFriendRequestRes(
                         f.getId(),
                         f.getAddressee().getId(),        // here: the receiver is the "other" user
                         f.getAddressee().getUsername(),
