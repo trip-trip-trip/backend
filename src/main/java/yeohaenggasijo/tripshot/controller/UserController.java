@@ -40,7 +40,7 @@ public class UserController {
      */
     @PatchMapping("/me")
     public ResponseEntity<ApiResponse<MyProfileRes>> updateMyProfile(
-            @RequestPart("file") MultipartFile file,
+            @RequestPart(value="file",required = false)  MultipartFile file,
             @RequestPart("data") UpdateMyProfileReq req
     ) {
         Long userId = currentUser.requireUserId();

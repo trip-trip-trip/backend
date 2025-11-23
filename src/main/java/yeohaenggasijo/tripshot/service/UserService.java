@@ -67,10 +67,10 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
-        if (req.getUsername() != null) {
+        if ((req.getUsername() != null) && !user.getUsername().equals(req.getUsername())) {
             user.setUsername(req.getUsername());
         }
-        if (req.getBio() != null) {
+        if ((req.getBio() != null) && !user.getBio().equals(req.getBio())) {
             user.setBio(req.getBio());
         }
         if (file != null) {
@@ -94,7 +94,7 @@ public class UserService {
             }
 
         }
-        if (req.getTag() != null) {
+        if ((req.getTag() != null) && !user.getTag().equals(req.getTag())) {
             Optional<User> check = userRepository.findByTag(req.getTag());
             if (check.isPresent()) {
                 throw new IllegalArgumentException("Tag already exists: " + req.getTag() +" -> user id: " + check.get().getId());
