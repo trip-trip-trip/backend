@@ -13,4 +13,6 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostRepositor
             "FROM Post p " +
             "WHERE p.author.id = :userId") // 특정 유저 ID로 필터링
     List<PostsLocaRes> findAllPostLocaByAuthorId(@Param("userId") Long userId);
+
+    Integer countPostByAuthor_Id(Long authorId);
 }

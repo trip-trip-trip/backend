@@ -19,6 +19,7 @@ import yeohaenggasijo.tripshot.service.UserService;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/trips")
@@ -52,7 +53,8 @@ public class TripController {
         Long uid = currentUser.requireUserId();
         TripRes data = tripService.getById(id);
         TripMediaRes mediaData = tripService.getContents(id);
-        return ResponseEntity.ok(ApiResponse.ok(new TripDetailRes(data, mediaData)));
+        Boolean isOwner = Objects.equals(data.ownerId(), uid);
+        return ResponseEntity.ok(ApiResponse.ok(new TripDetailRes(data, mediaData, isOwner)));
     }
 
     @GetMapping("/{id}/reel")

@@ -282,3 +282,16 @@ INSERT INTO trip_participants (id, created_at, updated_at, trip_id, user_id, rol
 VALUES (60, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 20, 13, 'VIEWER'),
        (61, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 20, 14, 'VIEWER'),
        (62, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 20, 10, 'OWNER');
+
+
+INSERT INTO trip_participants (id, created_at, updated_at, trip_id, user_id, role)
+VALUES
+    -- Trip 21 : Alice 제주 여행 (OWNER: Alice, VIEWER: Bob, Charlie)
+    (63, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 21, 10, 'OWNER'),
+    (64, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 21, 11, 'VIEWER'),
+    (65, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 21, 12, 'VIEWER'),
+
+    -- Trip 22 : Bob 부산 여행 (OWNER: Bob, VIEWER: Alice, Charlie)
+    (66, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 22, 11, 'OWNER'),
+    (67, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 22, 10, 'VIEWER'),
+    (68, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 22, 12, 'VIEWER');

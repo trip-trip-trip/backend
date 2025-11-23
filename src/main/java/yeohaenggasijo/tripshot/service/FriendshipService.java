@@ -8,8 +8,7 @@ import yeohaenggasijo.tripshot.domain.user.Friendship;
 import yeohaenggasijo.tripshot.domain.user.User;
 import yeohaenggasijo.tripshot.dto.user.req.*;
 import yeohaenggasijo.tripshot.dto.user.res.*;
-import yeohaenggasijo.tripshot.repository.FriendshipRepository;
-import yeohaenggasijo.tripshot.repository.UserRepository;
+import yeohaenggasijo.tripshot.repository.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +19,9 @@ public class FriendshipService {
 
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;
+    private final PostRepository postRepository;
+    private final TripRepository tripRepository;
+    private final TripParticipantRepository tripParticipantRepository;
 
     // ================== 내부 유틸 ==================
 
@@ -263,7 +265,10 @@ public class FriendshipService {
                 isMe,
                 isFriend,
                 pendingSent,
-                pendingReceived
+                pendingReceived,
+                postRepository.countPostByAuthor_Id(profileUserId),
+                getFriends(profileUserId).size(),
+                tripParticipantRepository.countByUser(target)
         );
     }
     // ================== 7. 친구 삭제(언프렌드) ==================
