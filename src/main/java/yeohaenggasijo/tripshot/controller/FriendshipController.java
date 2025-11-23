@@ -44,11 +44,11 @@ public class FriendshipController {
     }*/
 
     @GetMapping("/requests")
-    public ResponseEntity<ApiResponse<List<PendingFriendRequestRes>>> getPendingRequests(
+    public ResponseEntity<ApiResponse<List<?>>> getPendingRequests(
             @RequestParam(name = "type", defaultValue = "received") String type
     ) {
         Long userId = currentUser.requireUserId();
-        List<PendingFriendRequestRes> res;
+        List<?> res;
 
         String normalized = type.toLowerCase();
         switch (normalized) {
