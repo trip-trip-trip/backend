@@ -12,6 +12,7 @@ import yeohaenggasijo.tripshot.domain.trip.TripParticipant;
 import yeohaenggasijo.tripshot.domain.user.User;
 import yeohaenggasijo.tripshot.dto.trip.req.TripInviteCreateReq;
 import yeohaenggasijo.tripshot.dto.trip.req.TripInvitationRespondReq;
+import yeohaenggasijo.tripshot.dto.trip.res.InvitationToUserRes;
 import yeohaenggasijo.tripshot.dto.trip.res.TripInvitationListRes;
 import yeohaenggasijo.tripshot.dto.trip.res.TripInvitationRes;
 import yeohaenggasijo.tripshot.exception.BadRequestException;
@@ -126,6 +127,25 @@ public class TripInvitationService {
         );
     }
 
+    @Transactional
+    public List<InvitationToUserRes> getTripInvitationsToMe(Long uid) {
+        List<TripInvitation> tripInvitationList = tripInvitationRepository.findByInvitee_id(uid);
+        return (List<InvitationToUserRes>) tripInvitationList.stream()
+                .map(this::from)
+                .toList();
+    }
+
+    @Transactional
+    public InvitationToUserRes from(TripInvitation tripInvitation) {
+        return new InvitationToUserRes(
+                tripInvitation.getInvitee().getId(),
+                tripInvitation.getCreatedAt(),
+                tripInvitation.getInviter().getAvatarUrl(),
+                tripInvitation.getInviter().getUsername(),
+                tripInvitation.getTrip().getTitle(),
+                tripInvitation.getTrip().getId()
+        );
+    }
     /* ========= 초대 수락/거절 ========= */
 
     @Transactional
@@ -186,6 +206,8 @@ public class TripInvitationService {
 
         tripInvitationRepository.delete(invitation);
     }
+
+
 
     /* ========= 내부 유틸 ========= */
 

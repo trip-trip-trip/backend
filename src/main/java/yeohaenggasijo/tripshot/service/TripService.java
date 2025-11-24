@@ -114,7 +114,9 @@ public class TripService {
         // 여행이 종료되었는지 확인
         LocalDate today = LocalDate.now(clock);
         if (trip.getStatus() == TripStatus.COMPLETED || trip.getEndDate().isBefore(today)) {
-            throw new BadRequestException("종료된 여행은 수정할 수 없습니다.");
+            if (req.getStartDate() != null || req.getEndDate() != null || req.getPlaceId() != null) {
+                throw new BadRequestException("종료된 여행은 수정할 수 없습니다.");
+            }
         }
 
         // 각 필드 업데이트 (null이 아닌 경우에만)
