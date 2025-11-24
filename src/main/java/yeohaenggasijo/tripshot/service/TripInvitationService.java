@@ -130,7 +130,11 @@ public class TripInvitationService {
     @Transactional
     public List<InvitationToUserRes> getTripInvitationsToMe(Long uid) {
         List<TripInvitation> tripInvitationList = tripInvitationRepository.findByInvitee_id(uid);
-        return (List<InvitationToUserRes>) tripInvitationList.stream()
+        List<TripInvitation> tiListOnlyPending = tripInvitationList.stream()
+                .filter(ti -> ti.getStatus() == InvitationStatus.PENDING)
+                .toList();
+
+        return (List<InvitationToUserRes>) tiListOnlyPending.stream()
                 .map(this::from)
                 .toList();
     }
