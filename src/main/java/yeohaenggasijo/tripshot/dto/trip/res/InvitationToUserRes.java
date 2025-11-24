@@ -1,5 +1,6 @@
 package yeohaenggasijo.tripshot.dto.trip.res;
 
+import yeohaenggasijo.tripshot.domain.common.InvitationStatus;
 import yeohaenggasijo.tripshot.domain.trip.TripInvitation;
 
 import java.time.LocalDateTime;
@@ -10,7 +11,8 @@ public record InvitationToUserRes(
         String inviterProfileImg,
         String inviterName,
         String tripName,
-        Long tripId
+        Long tripId,
+        InvitationStatus status
 
 ) {
 
