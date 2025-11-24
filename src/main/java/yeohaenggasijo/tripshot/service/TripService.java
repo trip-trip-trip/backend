@@ -101,7 +101,7 @@ public class TripService {
 
     // 여행 정보 수정
     @Transactional
-    public Trip update(Long uid, Long tripId, TripUpdateReq req) {
+    public TripRes update(Long uid, Long tripId, TripUpdateReq req) {
         // 여행 존재 확인
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 여행입니다."));
@@ -152,8 +152,9 @@ public class TripService {
                     .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 장소입니다."));
             trip.setPlace(place);
         }
+        tripRepository.save(trip);
 
-        return trip;
+        return TripRes.from(trip);
     }
 
 
