@@ -142,6 +142,7 @@ public class TripInvitationService {
     @Transactional
     public InvitationToUserRes from(TripInvitation tripInvitation) {
         return new InvitationToUserRes(
+                tripInvitation.getId(),
                 tripInvitation.getInvitee().getId(),
                 tripInvitation.getCreatedAt(),
                 tripInvitation.getInviter().getAvatarUrl(),
