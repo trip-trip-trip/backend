@@ -6,6 +6,7 @@ import yeohaenggasijo.tripshot.domain.trip.TripInvitation;
 import java.time.LocalDateTime;
 
 public record InvitationToUserRes(
+        Long invitationId,
         Long userId,
         LocalDateTime createdAt,
         String inviterProfileImg,
