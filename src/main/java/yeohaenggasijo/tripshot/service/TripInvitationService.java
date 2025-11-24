@@ -143,7 +143,8 @@ public class TripInvitationService {
                 tripInvitation.getInviter().getAvatarUrl(),
                 tripInvitation.getInviter().getUsername(),
                 tripInvitation.getTrip().getTitle(),
-                tripInvitation.getTrip().getId()
+                tripInvitation.getTrip().getId(),
+                tripInvitation.getStatus()
         );
     }
     /* ========= 초대 수락/거절 ========= */
