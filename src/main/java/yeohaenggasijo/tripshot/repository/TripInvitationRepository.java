@@ -14,4 +14,6 @@ public interface TripInvitationRepository extends JpaRepository<TripInvitation, 
     List<TripInvitation> findByTrip_IdAndInviter_Id(Long tripId, Long inviterId);
 
     List<TripInvitation> findByTrip_IdAndInvitee_Id(Long tripId, Long inviteeId);
+
+    List<TripInvitation> findByInvitee_id(Long inviteeId);
 }
