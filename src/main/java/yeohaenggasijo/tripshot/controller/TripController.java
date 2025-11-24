@@ -64,8 +64,8 @@ public class TripController {
 
     ) {
         Long uid = currentUser.requireUserId();
-        Trip updated = tripService.update(uid, id, req);
-        return ResponseEntity.ok(ApiResponse.ok(TripRes.from(updated)));
+        TripRes updated = tripService.update(uid, id, req);
+        return ResponseEntity.ok(ApiResponse.ok(updated));
     }
 
     @GetMapping("/{id}/reel")
