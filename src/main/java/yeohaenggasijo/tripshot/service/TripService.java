@@ -297,9 +297,15 @@ public class TripService {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 여행입니다."));
 
-        // 2) owner 권한 검증
-        if (!trip.getOwner().getId().equals(userId)) {
-            throw new IllegalArgumentException("이 여행에 대한 수정 권한이 없습니다.");
+        // 🔥 2) 권한 검증 로직 변경
+        TripParticipant participant = tripParticipantRepository
+                .findByTrip_IdAndUser_Id(tripId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("이 여행에 참여 중인 유저가 아닙니다."));
+
+        // editor, owner만 허용
+        if (participant.getRole() != TripParticipantRole.OWNER &&
+                participant.getRole() != TripParticipantRole.EDITOR) {
+            throw new IllegalArgumentException("이 여행의 공유 앨범을 수정할 권한이 없습니다.");
         }
 
         // 3) trip의 모든 MediaAsset 조회

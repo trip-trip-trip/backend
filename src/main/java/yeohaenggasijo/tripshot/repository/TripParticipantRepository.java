@@ -34,4 +34,6 @@ public interface TripParticipantRepository extends JpaRepository<TripParticipant
             @Param("userId") Long userId,
             @Param("today") LocalDate today
     );
+    // ✅ add: find participant by trip & user
+    java.util.Optional<TripParticipant> findByTrip_IdAndUser_Id(Long tripId, Long userId);
 }
