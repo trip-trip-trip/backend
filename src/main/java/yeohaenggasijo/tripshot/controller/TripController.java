@@ -59,7 +59,7 @@ public class TripController {
         Long uid = currentUser.requireUserId();
         TripRes data = tripService.getById(id);
         TripMediaRes mediaData = tripService.getContents(id);
-        logger.info("[INFO] mediaData: {}", data);
+//        logger.info("[INFO] mediaData: {}", data);
         Boolean isOwner = Objects.equals(data.ownerId(), uid);
         return ResponseEntity.ok(ApiResponse.ok(new TripDetailRes(data, mediaData, isOwner)));
     }
