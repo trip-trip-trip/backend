@@ -164,15 +164,43 @@ public class TripService {
 
     @Transactional
     public List<TripDetailRes> myTrips(Long ownerId) {
-//        List<Trip> trips = tripRepository.findByOwner_Id(ownerId);
-        List<TripParticipant> tripParticipantList = tripParticipantRepository.findByUser_Id(ownerId);
+        // 기본: 전체 여행
+        return myTrips(ownerId, false);
+    }
+
+    @Transactional
+    public List<TripDetailRes> myTrips(Long ownerId, boolean completedOnly) {
+        // 오늘 날짜 (Clock 기반)
+        LocalDate today = LocalDate.now(clock);
+
+        List<TripParticipant> tripParticipantList =
+                tripParticipantRepository.findByUser_Id(ownerId);
+
         return tripParticipantList.stream()
-                .map(tripParticipant -> new TripDetailRes(
-                                getById(tripParticipant.getTrip().getId()),
-                                getContents(tripParticipant.getTrip().getId()),
-                                tripParticipant.getRole() == TripParticipantRole.OWNER
-                        )
-                )
+                .filter(tp -> {
+                    if (!completedOnly) {
+                        // 필터링 옵션이 false면 모두 통과
+                        return true;
+                    }
+
+                    Trip trip = tp.getTrip();
+                    LocalDate start = trip.getStartDate();
+                    LocalDate end   = trip.getEndDate();
+
+                    // “완료된 여행” 판정 로직
+                    // 여기서는: 오늘(today) 이 종료일(end) 이후인 경우를 완료로 본다.
+                    //  - end 가 null 이면 완료로 보지 않음
+                    //  - today > end 인 경우에만 완료(true)
+                    if (end == null) return false;
+                    return end.isBefore(today);      // today > end
+                    // 만약 "오늘이 종료일인 여행도 완료"로 보고 싶으면:
+                    // return !end.isAfter(today);   // end <= today
+                })
+                .map(tp -> new TripDetailRes(
+                        getById(tp.getTrip().getId()),
+                        getContents(tp.getTrip().getId()),
+                        tp.getRole() == TripParticipantRole.OWNER
+                ))
                 .toList();
     }
 
@@ -237,8 +265,8 @@ public class TripService {
                 .toList();
 
         // 3) 릴: 아예 안 보이는 릴이면 null
-        ShortReel reel_ = shortReelRepository.findByTrip_Id(tripId).orElse(null);
-        logger.info("[INFO] reel_: {}", reel_);
+//        ShortReel reel_ = shortReelRepository.findByTrip_Id(tripId).orElse(null);
+//        logger.info("[INFO] reel_: {}", reel_);
 
         ShortReel reel = shortReelRepository.findByTrip_Id(tripId)
                 .filter(r -> {
