@@ -295,3 +295,159 @@ VALUES
     (66, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 22, 11, 'OWNER'),
 --     (67, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 22, 10, 'VIEWER'),
     (68, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 22, 12, 'VIEWER');
+
+-- ============================================================
+-- 8. 미디어 공유 로직 테스트용 추가 MEDIA_ASSETS 데이터
+--    (기존 id=30,31,32 이후부터 이어서 사용)
+-- ============================================================
+
+-- Trip 20 (서울 여행)
+-- 30: (기존) Alice(10) 가 올린 공유 사진 (is_shared = TRUE)
+-- 32: (기존) Charlie(12) 가 올린 공유 사진 (is_shared = TRUE)
+
+-- 33: Alice(10)가 Trip 20에 올린 "비공개" 사진
+--      -> is_shared_in_album = FALSE, uploader_id = 10 (내가 올린 비공개)
+INSERT INTO media_assets (
+    id, created_at, updated_at,
+    uploader_id, trip_id,
+    content_type, media_kind, capture_type,
+    comment, url, thumbnail_url,
+    width, height,
+    taken_at, is_shared_in_album
+) VALUES (
+             33, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(),
+             10, 20,
+             'PHOTO', 'PHOTO', 'NORMAL',
+             '한강 야경 사진 (내가 올린 비공개)',
+             'https://cdn.trip.com/img/han_river_night.jpg',
+             'https://cdn.trip.com/thumb/han_river_night.jpg',
+             1920, 1080,
+             CURRENT_TIMESTAMP(), FALSE
+         );
+
+-- 34: Bob(11)이 Trip 20에 올린 "비공개" 사진
+--      -> 다른 사람이 올린 비공개 (is_shared_in_album = FALSE, uploader_id != 나)
+INSERT INTO media_assets (
+    id, created_at, updated_at,
+    uploader_id, trip_id,
+    content_type, media_kind, capture_type,
+    comment, url, thumbnail_url,
+    width, height,
+    taken_at, is_shared_in_album
+) VALUES (
+             34, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(),
+             11, 20,
+             'PHOTO', 'PHOTO', 'NORMAL',
+             '서울 골목 감성 스냅샷 (Bob 비공개)',
+             'https://cdn.trip.com/img/seoul_alley.jpg',
+             'https://cdn.trip.com/thumb/seoul_alley.jpg',
+             1600, 1067,
+             CURRENT_TIMESTAMP(), FALSE
+         );
+
+-- 35: Daisy(13)가 Trip 20에 올린 "공개" 사진
+--      -> 다른 사람이 올렸지만 shared = TRUE (is_shared_in_album = TRUE)
+INSERT INTO media_assets (
+    id, created_at, updated_at,
+    uploader_id, trip_id,
+    content_type, media_kind, capture_type,
+    comment, url, thumbnail_url,
+    width, height,
+    taken_at, is_shared_in_album
+) VALUES (
+             35, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(),
+             13, 20,
+             'PHOTO', 'PHOTO', 'NORMAL',
+             '남산타워 근처 카페에서 찍은 사진 (Daisy 공유)',
+             'https://cdn.trip.com/img/seoul_cafe.jpg',
+             'https://cdn.trip.com/thumb/seoul_cafe.jpg',
+             1080, 1350,
+             CURRENT_TIMESTAMP(), TRUE
+         );
+
+
+-- Trip 21 (제주 여행)에서 Alice(10)의 공유/비공개 사진
+
+-- 36: Alice(10) 가 Trip 21에 올린 "비공개" 사진
+--      -> is_shared_in_album = FALSE, uploader_id = 10
+INSERT INTO media_assets (
+    id, created_at, updated_at,
+    uploader_id, trip_id,
+    content_type, media_kind, capture_type,
+    comment, url, thumbnail_url,
+    width, height,
+    taken_at, is_shared_in_album
+) VALUES (
+             36, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(),
+             10, 21,
+             'PHOTO', 'PHOTO', 'NORMAL',
+             '제주 해변에서 혼자 찍은 셀카 (비공개)',
+             'https://cdn.trip.com/img/jeju_selfie.jpg',
+             'https://cdn.trip.com/thumb/jeju_selfie.jpg',
+             1080, 1080,
+             CURRENT_TIMESTAMP(), FALSE
+         );
+
+-- 37: Alice(10) 가 Trip 21에 올린 "공개" 사진
+--      -> is_shared_in_album = TRUE, uploader_id = 10
+INSERT INTO media_assets (
+    id, created_at, updated_at,
+    uploader_id, trip_id,
+    content_type, media_kind, capture_type,
+    comment, url, thumbnail_url,
+    width, height,
+    taken_at, is_shared_in_album
+) VALUES (
+             37, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(),
+             10, 21,
+             'PHOTO', 'PHOTO', 'NORMAL',
+             '제주 오름 정상에서 찍은 전경 (공유)',
+             'https://cdn.trip.com/img/jeju_mountain_view.jpg',
+             'https://cdn.trip.com/thumb/jeju_mountain_view.jpg',
+             1920, 1080,
+             CURRENT_TIMESTAMP(), TRUE
+         );
+
+
+-- ============================================================
+-- 9. ShortReel 및 ShortReelItem 더미 데이터 (Trip 20)
+--    TripMediaRes.getContents() 에서 Reel/Items 응답도 함께 테스트용
+-- ============================================================
+
+-- ShortReel: Trip 20용 릴스 (상태는 COLLECTING / DONE 등 enum 중 하나)
+INSERT INTO short_reels (
+    id, created_at, updated_at,
+    trip_id, creator_id,
+    title, output_media_id, render_status
+) VALUES (
+             70, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(),
+             20, 10,
+             '2025 서울 랜드마크 여행 하이라이트 릴스',
+             31,
+             'COLLECTING'
+         );
+
+-- ShortReelItem: 위 short_reels(70)에 포함될 컷들
+-- 테이블 컬럼 구조 가정: (id, created_at, updated_at, reel_id, media_id, position, hold_ms, transition)
+-- transition 은 Enum 값 중 'NONE' 사용
+
+INSERT INTO short_reel_items (
+    id, created_at, updated_at,
+    reel_id, media_id,
+    position, hold_ms, transition
+) VALUES
+      -- 1번 컷: 기존 Alice 공유 사진(id=30)
+      (80, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(),
+       70, 30,
+       1, 3, 'NONE'),
+
+      -- 2번 컷: Alice 비공개 사진(id=33)
+      (81, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(),
+       70, 33,
+       2, 3, 'NONE'),
+
+      -- 3번 컷: Daisy 공유 사진(id=35)
+      (82, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(),
+       70, 35,
+       3, 3, 'NONE');
+

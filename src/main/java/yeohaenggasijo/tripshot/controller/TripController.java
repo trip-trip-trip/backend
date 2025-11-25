@@ -1,6 +1,8 @@
 package yeohaenggasijo.tripshot.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import yeohaenggasijo.tripshot.domain.trip.Trip;
@@ -30,6 +32,7 @@ public class TripController {
     private final CurrentUserProvider currentUser;
     private final ShortReelService shortReelService;
     private final TripInvitationService tripInvitationService;
+    private static final Logger logger = LoggerFactory.getLogger(TripController.class);
 
     @PostMapping
     public ResponseEntity<ApiResponse<TripRes>> create(@RequestBody TripCreateReq req) {
@@ -53,6 +56,7 @@ public class TripController {
         Long uid = currentUser.requireUserId();
         TripRes data = tripService.getById(id);
         TripMediaRes mediaData = tripService.getContents(id);
+        logger.info("[INFO] mediaData: {}", data);
         Boolean isOwner = Objects.equals(data.ownerId(), uid);
         return ResponseEntity.ok(ApiResponse.ok(new TripDetailRes(data, mediaData, isOwner)));
     }

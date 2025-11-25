@@ -2,6 +2,7 @@ package yeohaenggasijo.tripshot.util;
 
 import org.springframework.stereotype.Component;
 import yeohaenggasijo.tripshot.domain.media.MediaAsset;
+import yeohaenggasijo.tripshot.domain.place.Place;
 import yeohaenggasijo.tripshot.domain.post.Post;
 import yeohaenggasijo.tripshot.domain.post.PostMedia;
 import yeohaenggasijo.tripshot.domain.user.User;
@@ -24,7 +25,8 @@ public class PostMapper {
             int likeCount,
             int commentCount,
             boolean isLiked,
-            boolean isMe
+            boolean isMe,
+            Place place
     ){
       // 모든 인자를 받아서 PostRes DTO를 생성하는 로직
       return PostRes.builder()
@@ -43,6 +45,7 @@ public class PostMapper {
               // BaseEntity에서 상속받은 필드
               .createdAt(post.getCreatedAt())
               .updatedAt(post.getUpdatedAt())
+              .place(place.getName())
               .build();
     }
 

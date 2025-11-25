@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import yeohaenggasijo.tripshot.domain.place.Place;
 import yeohaenggasijo.tripshot.domain.post.Like;
 import yeohaenggasijo.tripshot.domain.post.Post;
 import yeohaenggasijo.tripshot.domain.trip.Trip;
@@ -43,6 +44,8 @@ public class PostRes {
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
     private final LocalDateTime updatedAt;
+
+    private final String place;
 
 
 }
