@@ -44,19 +44,22 @@ public class TripController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<TripDetailRes>>> myTrips() {
+    public ResponseEntity<ApiResponse<List<TripDetailRes>>> myTrips(
+            @RequestParam(name = "completedOnly", required = false, defaultValue = "false")
+            boolean completedOnly
+    ) {
         Long uid = currentUser.requireUserId();
-        List<TripDetailRes> list = tripService.myTrips(uid);
+        List<TripDetailRes> list = tripService.myTrips(uid, completedOnly);
         return ResponseEntity.ok(ApiResponse.ok(list));
-
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TripDetailRes>> detail(@PathVariable Long id) {
         Long uid = currentUser.requireUserId();
         TripRes data = tripService.getById(id);
         TripMediaRes mediaData = tripService.getContents(id);
-        logger.info("[INFO] mediaData: {}", data);
+//        logger.info("[INFO] mediaData: {}", data);
         Boolean isOwner = Objects.equals(data.ownerId(), uid);
         return ResponseEntity.ok(ApiResponse.ok(new TripDetailRes(data, mediaData, isOwner)));
     }
