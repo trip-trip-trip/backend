@@ -28,12 +28,18 @@ public class QPost extends EntityPathBase<Post> {
 
     public final StringPath caption = createString("caption");
 
+    public final ListPath<Comment, QComment> comments = this.<Comment, QComment>createList("comments", Comment.class, QComment.class, PathInits.DIRECT2);
+
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
+    public final ListPath<Like, QLike> likes = this.<Like, QLike>createList("likes", Like.class, QLike.class, PathInits.DIRECT2);
+
     public final yeohaenggasijo.tripshot.domain.place.QPlace place;
+
+    public final ListPath<PostMedia, QPostMedia> postMedias = this.<PostMedia, QPostMedia>createList("postMedias", PostMedia.class, QPostMedia.class, PathInits.DIRECT2);
 
     public final yeohaenggasijo.tripshot.domain.trip.QTrip trip;
 

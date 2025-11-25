@@ -2,6 +2,7 @@ package yeohaenggasijo.tripshot.domain.post;
 
 import yeohaenggasijo.tripshot.domain.base.BaseEntity;
 import yeohaenggasijo.tripshot.domain.common.PostVisibility;
+import yeohaenggasijo.tripshot.domain.media.MediaAsset;
 import yeohaenggasijo.tripshot.domain.place.Place;
 import yeohaenggasijo.tripshot.domain.trip.Trip;
 import yeohaenggasijo.tripshot.domain.user.User;
@@ -9,6 +10,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
@@ -46,4 +49,13 @@ public class Post extends BaseEntity {
     }
     this.updatedAt = LocalDateTime.now();
   }
+
+  @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Comment> comments = new ArrayList<>();
+
+  @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Like> likes = new ArrayList<>();
+
+  @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<PostMedia> postMedias = new ArrayList<>();
 }
