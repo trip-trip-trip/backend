@@ -10,6 +10,7 @@ import yeohaenggasijo.tripshot.domain.trip.Trip;
 import yeohaenggasijo.tripshot.domain.trip.TripInvitation;
 import yeohaenggasijo.tripshot.domain.trip.TripParticipant;
 import yeohaenggasijo.tripshot.domain.user.User;
+import yeohaenggasijo.tripshot.domain.common.TripStatus;
 import yeohaenggasijo.tripshot.dto.trip.req.TripInviteCreateReq;
 import yeohaenggasijo.tripshot.dto.trip.req.TripInvitationRespondReq;
 import yeohaenggasijo.tripshot.dto.trip.res.InvitationToUserRes;
@@ -154,6 +155,10 @@ public class TripInvitationService {
     }
     /* ========= 초대 수락/거절 ========= */
 
+    /* ========= 초대 수락/거절 ========= */
+
+    /* ========= 초대 수락/거절 ========= */
+
     @Transactional
     public TripInvitationRes respondInvitation(Long userId, Long invitationId, TripInvitationRespondReq req) {
         TripInvitation invitation = tripInvitationRepository.findById(invitationId)
@@ -172,9 +177,20 @@ public class TripInvitationService {
 
         switch (decision) {
             case "ACCEPT" -> {
+                // 1) Check if the user is already participating in an ACTIVE trip
+                boolean alreadyTraveling = tripParticipantRepository
+                        .existsByUser_IdAndTrip_Status(userId, TripStatus.ACTIVE);
+
+                if (alreadyTraveling) {
+                    // Business rule: a user cannot accept a new trip while already traveling
+                    throw new BadRequestException("이미 진행 중인 여행이 있어 초대를 수락할 수 없습니다.");
+                }
+
+                // 2) Mark invitation as accepted
                 invitation.setStatus(InvitationStatus.ACCEPTED);
                 invitation.setRespondedAt(now);
 
+                // 3) Add user as a participant if not already joined
                 Long tripId = invitation.getTrip().getId();
                 if (!tripParticipantRepository.existsByTrip_IdAndUser_Id(tripId, userId)) {
                     TripParticipant participant = TripParticipant.builder()
@@ -194,7 +210,6 @@ public class TripInvitationService {
 
         return toRes(invitation);
     }
-
     /* ========= 초대 삭제(취소) ========= */
 
     @Transactional
