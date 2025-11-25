@@ -265,8 +265,8 @@ public class TripService {
                 .toList();
 
         // 3) 릴: 아예 안 보이는 릴이면 null
-        ShortReel reel_ = shortReelRepository.findByTrip_Id(tripId).orElse(null);
-        logger.info("[INFO] reel_: {}", reel_);
+//        ShortReel reel_ = shortReelRepository.findByTrip_Id(tripId).orElse(null);
+//        logger.info("[INFO] reel_: {}", reel_);
 
         ShortReel reel = shortReelRepository.findByTrip_Id(tripId)
                 .filter(r -> {
