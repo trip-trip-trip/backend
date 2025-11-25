@@ -22,6 +22,7 @@ import yeohaenggasijo.tripshot.repository.TripParticipantRepository;
 import yeohaenggasijo.tripshot.repository.TripRepository;
 import yeohaenggasijo.tripshot.repository.UserRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -178,8 +179,9 @@ public class TripInvitationService {
         switch (decision) {
             case "ACCEPT" -> {
                 // 1) Check if the user is already participating in an ACTIVE trip
-                boolean alreadyTraveling = tripParticipantRepository
-                        .existsByUser_IdAndTrip_Status(userId, TripStatus.ACTIVE);
+//                boolean alreadyTraveling = tripParticipantRepository
+//                        .existsByUser_IdAndTrip_Status(userId, TripStatus.ACTIVE);
+                boolean  alreadyTraveling = tripParticipantRepository.existsActiveTripForUser(userId, LocalDate.now());
 
                 if (alreadyTraveling) {
                     // Business rule: a user cannot accept a new trip while already traveling

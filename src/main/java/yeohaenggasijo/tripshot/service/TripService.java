@@ -40,6 +40,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.lang.System.out;
+
 @Service
 @RequiredArgsConstructor
 public class TripService {
@@ -183,8 +185,8 @@ public class TripService {
 
         List<TripParticipant> participants =
                 tripParticipantRepository.findByTrip_Id(tripId);
-        logger.info("{} participants found", participants.size());
-        logger.info("participants: {}", participants);
+//        logger.info("{} participants found", participants.size());
+//        logger.info("participants: {}", participants);
 
         List<String> names = new ArrayList<>();
         List<String> profileImgs = new ArrayList<>();
@@ -201,28 +203,64 @@ public class TripService {
         return TripRes.fromWithUserInfo(trip, names, profileImgs, tags);
     }
 
-    /* ---------- 여행에 속한 미디어(사진/스크랩북/릴) ---------- */
+    // 예: TripService 또는 TripMediaService 안
 
     @Transactional(readOnly = true)
     public TripMediaRes getContents(Long tripId) {
+        // 로그인 안 한 상태도 고려해서 Optional 사용
+        Long currentUserId = currentUserProvider.getUserId().orElse(null);
+
+        // 1) 사진: (isShared || isMine) 인 MediaAsset 만
         List<PhotoRes> photos = mediaAssetRepository
                 .findByTrip_IdAndContentTypeOrderByTakenAt(tripId, ContentType.PHOTO)
                 .stream()
+                .filter(asset -> canViewMedia(asset, currentUserId))  // ★ 필터링 추가
                 .map(this::toPhotoRes)
                 .toList();
 
+        // 2) 스크랩북: 스크랩북이 가진 표지/대표 미디어 기준으로 필터링
         List<ScrapbookRes> scrapbooks = scrapbookRepository.findByTrip_Id(tripId)
                 .stream()
+                .filter(sb -> {
+                    // 스크랩북이 어떤 미디어를 대표로 들고 있다면 그걸 기준으로 보안 처리
+                    MediaAsset cover = sb.getCoverMedia(); // 없으면 null 일 수도 있음
+                    boolean mine = currentUserId != null
+                            && sb.getCreator() != null
+                            && currentUserId.equals(sb.getCreator().getId());
+                    boolean shared = (cover != null && canViewMedia(cover, currentUserId));
+
+                    // creator 본인은 항상 볼 수 있고,
+                    // coverMedia 가 (isShared || isMine) 이면 볼 수 있게
+                    return mine || shared;
+                })
                 .map(this::toScrapbookRes)
                 .toList();
 
-        ShortReel reel = shortReelRepository.findByTrip_Id(tripId).orElse(null);
+        // 3) 릴: 아예 안 보이는 릴이면 null
+        ShortReel reel_ = shortReelRepository.findByTrip_Id(tripId).orElse(null);
+        logger.info("[INFO] reel_: {}", reel_);
+
+        ShortReel reel = shortReelRepository.findByTrip_Id(tripId)
+                .filter(r -> {
+                    boolean mine = currentUserId != null
+                            && r.getCreator() != null
+                            && currentUserId.equals(r.getCreator().getId());
+                    MediaAsset output = r.getOutputMedia(); // 아직 없을 수도 있음
+//                    logger.info("[INFO]output: {}", output);
+//                    out.println("output: " + output);
+                    boolean shared = (canViewMedia(output, currentUserId));
+                    return mine || shared;
+                })
+                .orElse(null);
+
         ReelRes reelRes = (reel == null) ? null : toReelRes(reel);
 
+        // 4) 릴 아이템: 해당 아이템이 가진 media 기준으로 필터링
         List<ReelItemRes> reelItems = (reel == null)
                 ? List.of()
                 : shortReelItemRepository.findByReel_Id(reel.getId())
                 .stream()
+                .filter(item -> canViewMedia(item.getMedia(), currentUserId))  // ★ 필터링 추가
                 .sorted(Comparator.comparing(
                         ShortReelItem::getPosition,
                         Comparator.nullsLast(Integer::compareTo)))
@@ -230,6 +268,24 @@ public class TripService {
                 .toList();
 
         return new TripMediaRes(photos, scrapbooks, reelItems, reelRes);
+    }
+
+    /**
+     * (isShared || isMine) 판별용 공통 헬퍼
+     */
+    private boolean canViewMedia(MediaAsset asset, Long currentUserId) {
+        if (asset == null) return false;
+
+        // isSharedInAlbum == true 인 경우
+        boolean isShared = Boolean.TRUE.equals(asset.getIsSharedInAlbum());
+
+        // 업로더 == 현재 유저
+        boolean isMine = false;
+        if (currentUserId != null && asset.getUploader() != null) {
+            isMine = currentUserId.equals(asset.getUploader().getId());
+        }
+
+        return isShared || isMine;
     }
 
     /* ---------- 공유 앨범 공개 여부 토글 ---------- */

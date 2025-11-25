@@ -83,7 +83,9 @@ public class MainPageService {
                 0,          // likeCount
                 0,          // commentCount
                 false,       // isLiked
-                true        // isMe
+                true,        // isMe
+                trip.getPlace()
+
         );
     }
 
@@ -279,7 +281,8 @@ public class MainPageService {
                 likeCount,
                 commentCount,
                 isLiked,
-                currentUserId != null && post.getAuthor().getId().equals(currentUserId)
+                post.getAuthor().getId().equals(currentUserId),
+                post.getPlace()
         );
 
     }
@@ -378,7 +381,8 @@ public class MainPageService {
                             likeCounts.getOrDefault(post.getId(), 0),
                             commentCounts.getOrDefault(post.getId(), 0),
                             likedPostIds.contains(post.getId()),
-                            post.getAuthor().getId().equals(currentUserId)
+                            post.getAuthor().getId().equals(currentUserId),
+                            post.getPlace()
                     );
                 })
                 .collect(Collectors.toList());
