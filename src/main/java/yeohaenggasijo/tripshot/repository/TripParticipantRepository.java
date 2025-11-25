@@ -20,7 +20,7 @@ public interface TripParticipantRepository extends JpaRepository<TripParticipant
 
     List<TripParticipant> findByUser_Id(Long ownerId);
 
-    // Check if the user is already participating in any ACTIVE trip
+    // Check if the user is already partiscipating in any ACTIVE trip
     boolean existsByUser_IdAndTrip_Status(Long userId, TripStatus status);
 
     @Query("""

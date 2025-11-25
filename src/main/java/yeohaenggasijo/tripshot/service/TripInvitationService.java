@@ -159,7 +159,6 @@ public class TripInvitationService {
     /* ========= 초대 수락/거절 ========= */
 
     /* ========= 초대 수락/거절 ========= */
-
     @Transactional
     public TripInvitationRes respondInvitation(Long userId, Long invitationId, TripInvitationRespondReq req) {
         TripInvitation invitation = tripInvitationRepository.findById(invitationId)
@@ -178,21 +177,21 @@ public class TripInvitationService {
 
         switch (decision) {
             case "ACCEPT" -> {
-                // 1) Check if the user is already participating in an ACTIVE trip
-//                boolean alreadyTraveling = tripParticipantRepository
-//                        .existsByUser_IdAndTrip_Status(userId, TripStatus.ACTIVE);
-                boolean  alreadyTraveling = tripParticipantRepository.existsActiveTripForUser(userId, LocalDate.now());
+                // 1) Check if the user is already participating in an active trip
+                boolean alreadyTraveling = tripParticipantRepository.existsActiveTripForUser(userId, LocalDate.now());
 
                 if (alreadyTraveling) {
-                    // Business rule: a user cannot accept a new trip while already traveling
-                    throw new BadRequestException("이미 진행 중인 여행이 있어 초대를 수락할 수 없습니다.");
+                    // Business rule: if the user is already traveling,
+                    // this invitation is treated as declined (no error thrown).
+                    invitation.setStatus(InvitationStatus.DECLINED);
+                    invitation.setRespondedAt(now);
+                    break; // just fall through to 'return toRes(invitation);'
                 }
 
-                // 2) Mark invitation as accepted
+                // 2) Normal accept flow (user is not currently traveling)
                 invitation.setStatus(InvitationStatus.ACCEPTED);
                 invitation.setRespondedAt(now);
 
-                // 3) Add user as a participant if not already joined
                 Long tripId = invitation.getTrip().getId();
                 if (!tripParticipantRepository.existsByTrip_IdAndUser_Id(tripId, userId)) {
                     TripParticipant participant = TripParticipant.builder()
@@ -212,6 +211,8 @@ public class TripInvitationService {
 
         return toRes(invitation);
     }
+
+
     /* ========= 초대 삭제(취소) ========= */
 
     @Transactional
