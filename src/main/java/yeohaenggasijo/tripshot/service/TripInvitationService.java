@@ -13,6 +13,7 @@ import yeohaenggasijo.tripshot.domain.user.User;
 import yeohaenggasijo.tripshot.domain.common.TripStatus;
 import yeohaenggasijo.tripshot.dto.trip.req.TripInviteCreateReq;
 import yeohaenggasijo.tripshot.dto.trip.req.TripInvitationRespondReq;
+import yeohaenggasijo.tripshot.dto.trip.res.InvitationToUserRes;
 import yeohaenggasijo.tripshot.dto.trip.res.TripInvitationListRes;
 import yeohaenggasijo.tripshot.dto.trip.res.TripInvitationRes;
 import yeohaenggasijo.tripshot.exception.BadRequestException;
@@ -127,6 +128,31 @@ public class TripInvitationService {
         );
     }
 
+    @Transactional
+    public List<InvitationToUserRes> getTripInvitationsToMe(Long uid) {
+        List<TripInvitation> tripInvitationList = tripInvitationRepository.findByInvitee_id(uid);
+        List<TripInvitation> tiListOnlyPending = tripInvitationList.stream()
+                .filter(ti -> ti.getStatus() == InvitationStatus.PENDING)
+                .toList();
+
+        return (List<InvitationToUserRes>) tiListOnlyPending.stream()
+                .map(this::from)
+                .toList();
+    }
+
+    @Transactional
+    public InvitationToUserRes from(TripInvitation tripInvitation) {
+        return new InvitationToUserRes(
+                tripInvitation.getId(),
+                tripInvitation.getInvitee().getId(),
+                tripInvitation.getCreatedAt(),
+                tripInvitation.getInviter().getAvatarUrl(),
+                tripInvitation.getInviter().getUsername(),
+                tripInvitation.getTrip().getTitle(),
+                tripInvitation.getTrip().getId(),
+                tripInvitation.getStatus()
+        );
+    }
     /* ========= 초대 수락/거절 ========= */
 
     /* ========= 초대 수락/거절 ========= */
@@ -201,6 +227,8 @@ public class TripInvitationService {
 
         tripInvitationRepository.delete(invitation);
     }
+
+
 
     /* ========= 내부 유틸 ========= */
 

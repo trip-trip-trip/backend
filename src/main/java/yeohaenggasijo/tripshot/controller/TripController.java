@@ -19,6 +19,7 @@ import yeohaenggasijo.tripshot.service.UserService;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/trips")
@@ -52,7 +53,19 @@ public class TripController {
         Long uid = currentUser.requireUserId();
         TripRes data = tripService.getById(id);
         TripMediaRes mediaData = tripService.getContents(id);
-        return ResponseEntity.ok(ApiResponse.ok(new TripDetailRes(data, mediaData)));
+        Boolean isOwner = Objects.equals(data.ownerId(), uid);
+        return ResponseEntity.ok(ApiResponse.ok(new TripDetailRes(data, mediaData, isOwner)));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<TripRes>> update(
+            @PathVariable Long id,
+            @RequestBody TripUpdateReq req
+
+    ) {
+        Long uid = currentUser.requireUserId();
+        TripRes updated = tripService.update(uid, id, req);
+        return ResponseEntity.ok(ApiResponse.ok(updated));
     }
 
     @GetMapping("/{id}/reel")
@@ -109,6 +122,8 @@ public class TripController {
         TripInvitationListRes result = tripInvitationService.getTripInvitations(uid, tripId, direction);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
+
+
 
 
 

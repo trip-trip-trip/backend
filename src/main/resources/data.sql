@@ -214,7 +214,7 @@ VALUES (21, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 10, '2024 제주 힐링 �
 INSERT INTO trips (id, created_at, updated_at, owner_id, title, description, visibility, status, start_date, end_date,
                    place_id, cover_media_id, invite_code)
 VALUES (22, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 11, '2026 부산 불꽃축제', '친구들과 함께 가는 부산 여행.', 'FRIENDS', 'UPCOMING',
-        DATE '2026-10-20', DATE '2026-10-23', 10, NULL, 'BUSAN2026');
+        DATE '2025-10-20', DATE '2026-10-23', 10, NULL, 'BUSAN2026');
 
 
 -- ** 4. 미디어 에셋 (MEDIA_ASSETS) 더미 데이터 **
@@ -282,3 +282,16 @@ INSERT INTO trip_participants (id, created_at, updated_at, trip_id, user_id, rol
 VALUES (60, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 20, 13, 'VIEWER'),
        (61, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 20, 14, 'VIEWER'),
        (62, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 20, 10, 'OWNER');
+
+
+INSERT INTO trip_participants (id, created_at, updated_at, trip_id, user_id, role)
+VALUES
+    -- Trip 21 : Alice 제주 여행 (OWNER: Alice, VIEWER: Bob, Charlie)
+    (63, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 21, 10, 'OWNER'),
+    (64, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 21, 11, 'VIEWER'),
+    (65, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 21, 12, 'VIEWER'),
+
+    -- Trip 22 : Bob 부산 여행 (OWNER: Bob, VIEWER: Alice, Charlie)
+    (66, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 22, 11, 'OWNER'),
+--     (67, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 22, 10, 'VIEWER'),
+    (68, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), 22, 12, 'VIEWER');

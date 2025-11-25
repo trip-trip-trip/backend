@@ -5,9 +5,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import yeohaenggasijo.tripshot.dto.ApiResponse;
 import yeohaenggasijo.tripshot.dto.trip.req.TripInvitationRespondReq;
+import yeohaenggasijo.tripshot.dto.trip.res.InvitationToUserRes;
 import yeohaenggasijo.tripshot.dto.trip.res.TripInvitationRes;
 import yeohaenggasijo.tripshot.security.CurrentUserProvider;
 import yeohaenggasijo.tripshot.service.TripInvitationService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/invitations")
@@ -38,5 +41,12 @@ public class TripInvitationController {
         return ResponseEntity.ok(
                 ApiResponse.of(true, 200, "초대가 삭제되었습니다.", null)
         );
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<InvitationToUserRes>>> getInvitationsToMe() {
+        Long uid = currentUserProvider.requireUserId();
+        List<InvitationToUserRes> result = tripInvitationService.getTripInvitationsToMe(uid);
+        return ResponseEntity.ok(ApiResponse.ok(result));
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import yeohaenggasijo.tripshot.domain.album.Album;
 import yeohaenggasijo.tripshot.domain.common.ContentType;
+import yeohaenggasijo.tripshot.domain.common.TripParticipantRole;
 import yeohaenggasijo.tripshot.domain.common.TripStatus;
 import yeohaenggasijo.tripshot.domain.common.TripVisibility;
 import yeohaenggasijo.tripshot.domain.media.MediaAsset;
@@ -25,11 +26,11 @@ import yeohaenggasijo.tripshot.dto.reel.ReelRes;
 import yeohaenggasijo.tripshot.dto.scrapbook.ScrapbookRes;
 import yeohaenggasijo.tripshot.dto.trip.req.TripCreateReq;
 import yeohaenggasijo.tripshot.dto.trip.req.TripShareAlbumReq;
+import yeohaenggasijo.tripshot.dto.trip.req.TripUpdateReq;
 import yeohaenggasijo.tripshot.dto.trip.res.*;
 import yeohaenggasijo.tripshot.exception.BadRequestException;
 import yeohaenggasijo.tripshot.repository.*;
 import yeohaenggasijo.tripshot.security.CurrentUserProvider;
-
 
 
 import java.time.Clock;
@@ -87,18 +88,88 @@ public class TripService {
                 .build();
 
         tripRepository.save(trip);
+
+        tripParticipantRepository.save(
+                TripParticipant.builder()
+                        .trip(trip)
+                        .user(owner)
+                        .role(TripParticipantRole.OWNER)
+                        .build()
+        );
         return trip;
     }
+
+    // 여행 정보 수정
+    @Transactional
+    public TripRes update(Long uid, Long tripId, TripUpdateReq req) {
+        // 여행 존재 확인
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 여행입니다."));
+
+        // 소유자 권한 확인
+        if (!trip.getOwner().getId().equals(uid)) {
+            throw new IllegalArgumentException("이 여행에 대한 수정 권한이 없습니다.");
+        }
+
+        // 여행이 종료되었는지 확인
+        LocalDate today = LocalDate.now(clock);
+        if (trip.getStatus() == TripStatus.COMPLETED || trip.getEndDate().isBefore(today)) {
+            if (req.getStartDate() != null || req.getEndDate() != null || req.getPlaceId() != null) {
+                throw new BadRequestException("종료된 여행은 수정할 수 없습니다.");
+            }
+        }
+
+        // 각 필드 업데이트 (null이 아닌 경우에만)
+        if (req.getTitle() != null) {
+            trip.setTitle(req.getTitle());
+        }
+
+        if (req.getDescription() != null) {
+            trip.setDescription(req.getDescription());
+        }
+
+        if (req.getStartDate() != null && req.getEndDate() != null) {
+            // 날짜 유효성 검사
+            if (req.getEndDate().isBefore(req.getStartDate())) {
+                throw new BadRequestException("종료일은 시작일보다 이전일 수 없습니다.");
+            }
+            if (req.getEndDate().isBefore(today)) {
+                throw new BadRequestException("종료일은 오늘보다 이전일 수 없습니다.");
+            }
+
+            trip.setStartDate(req.getStartDate());
+            trip.setEndDate(req.getEndDate());
+
+            // 상태 업데이트
+            TripStatus newStatus = req.getStartDate().isAfter(today)
+                    ? TripStatus.UPCOMING
+                    : TripStatus.ACTIVE;
+            trip.setStatus(newStatus);
+        }
+
+        if (req.getPlaceId() != null) {
+            Place place = placeRepository.findById(req.getPlaceId())
+                    .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 장소입니다."));
+            trip.setPlace(place);
+        }
+        tripRepository.save(trip);
+
+        return TripRes.from(trip);
+    }
+
 
     /* ---------- 내 여행 목록 ---------- */
 
     @Transactional
     public List<TripDetailRes> myTrips(Long ownerId) {
-        List<Trip> trips = tripRepository.findByOwner_Id(ownerId);
-        return trips.stream()
-                .map(trip -> new TripDetailRes(
-                        getById(trip.getId()),
-                        getContents(trip.getId()))
+//        List<Trip> trips = tripRepository.findByOwner_Id(ownerId);
+        List<TripParticipant> tripParticipantList = tripParticipantRepository.findByUser_Id(ownerId);
+        return tripParticipantList.stream()
+                .map(tripParticipant -> new TripDetailRes(
+                                getById(tripParticipant.getTrip().getId()),
+                                getContents(tripParticipant.getTrip().getId()),
+                                tripParticipant.getRole() == TripParticipantRole.OWNER
+                        )
                 )
                 .toList();
     }
@@ -197,11 +268,10 @@ public class TripService {
     }
 
 
-
     @Transactional(readOnly = true)
     public OngoingTripRes isActiveTrip() {
         Long loggedInUserId = currentUserProvider.requireUserId();
-        List<Trip> ongoingTrip = tripRepository.findActiveTrips(loggedInUserId,LocalDate.now());
+        List<Trip> ongoingTrip = tripRepository.findActiveTrips(loggedInUserId, LocalDate.now());
         if (ongoingTrip.isEmpty()) {
             return OngoingTripRes.empty();
         }
@@ -246,12 +316,12 @@ public class TripService {
         );
     }
 
-    private ReelRes toReelRes(ShortReel r){
-            return new ReelRes(
-                    toMediaAssetRes(r.getOutputMedia()),
-                    r.getTitle(),
-                    r.getRenderStatus()
-            );
+    private ReelRes toReelRes(ShortReel r) {
+        return new ReelRes(
+                toMediaAssetRes(r.getOutputMedia()),
+                r.getTitle(),
+                r.getRenderStatus()
+        );
     }
 
     private ReelItemRes toReelItemRes(ShortReelItem it) {
