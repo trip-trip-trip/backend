@@ -44,12 +44,15 @@ public class TripController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<TripDetailRes>>> myTrips() {
+    public ResponseEntity<ApiResponse<List<TripDetailRes>>> myTrips(
+            @RequestParam(name = "completedOnly", required = false, defaultValue = "false")
+            boolean completedOnly
+    ) {
         Long uid = currentUser.requireUserId();
-        List<TripDetailRes> list = tripService.myTrips(uid);
+        List<TripDetailRes> list = tripService.myTrips(uid, completedOnly);
         return ResponseEntity.ok(ApiResponse.ok(list));
-
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TripDetailRes>> detail(@PathVariable Long id) {
