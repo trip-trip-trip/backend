@@ -265,8 +265,7 @@ public class TripService {
                 .toList();
 
         // 3) 릴: 아예 안 보이는 릴이면 null
-//        ShortReel reel_ = shortReelRepository.findByTrip_Id(tripId).orElse(null);
-//        logger.info("[INFO] reel_: {}", reel_);
+
 
         ShortReel reel = shortReelRepository.findByTrip_Id(tripId)
                 .filter(r -> {
@@ -283,10 +282,13 @@ public class TripService {
 
         ReelRes reelRes = (reel == null) ? null : toReelRes(reel);
 
+        ShortReel reel_root = shortReelRepository.findByTrip_Id(tripId).orElse(null);
+//        logger.info("[INFO] reel_: {}", reel_);
+
         // 4) 릴 아이템: 해당 아이템이 가진 media 기준으로 필터링
-        List<ReelItemRes> reelItems = (reel == null)
+        List<ReelItemRes> reelItems = (reel_root == null)
                 ? List.of()
-                : shortReelItemRepository.findByReel_Id(reel.getId())
+                : shortReelItemRepository.findByReel_Id(reel_root.getId())
                 .stream()
                 .filter(item -> canViewMedia(item.getMedia(), currentUserId))  // ★ 필터링 추가
                 .sorted(Comparator.comparing(
