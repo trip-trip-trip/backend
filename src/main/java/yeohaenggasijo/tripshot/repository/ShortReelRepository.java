@@ -7,4 +7,9 @@ import java.util.Optional;
 
 public interface ShortReelRepository extends JpaRepository<ShortReel, Long> {
     Optional<ShortReel> findByTrip_Id(Long tripId);
+
+    Optional<ShortReel> findFirstByTrip_IdAndCreator_IdOrderByCreatedAtDesc(
+            Long tripId,
+            Long creatorId
+    );
 }

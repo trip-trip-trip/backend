@@ -44,14 +44,19 @@ public class ShortReelService {
     public ReelItemRes createReelItem(MultipartFile file, CreateReelItemReq req) {
         Long loggedInUserId = currentUserProvider.getUserId()
                 .orElseThrow(() -> new EntityNotFoundException("User not logged in"));
+
         CreateMediaAssetReq media = req.media();
-        ShortReel reel = shortReelRepository.findByTrip_Id(req.tripId())
+
+        // (trip, creator) 기준으로 가장 최신 ShortReel 찾기
+        ShortReel reel = shortReelRepository
+                .findFirstByTrip_IdAndCreator_IdOrderByCreatedAtDesc(req.tripId(), loggedInUserId)
                 .orElseGet(() -> {
                     Trip trip = tripRepository.findById(req.tripId())
                             .orElseThrow(EntityNotFoundException::new);
                     User creator = userRepository.findById(loggedInUserId)
                             .orElseThrow(EntityNotFoundException::new);
 
+                    // 이 시점에서부터 creator별로 서로 다른 reel 생성 (outputMedia 비어있고 COLLECTING 상태)
                     return shortReelRepository.save(
                             ShortReel.builder()
                                     .trip(trip)
@@ -63,7 +68,7 @@ public class ShortReelService {
                     );
                 });
 
-        // 위치 계산(현재 trip이 가진 shortReel의 모든 item중 가장 큰 position + 1, 없으면 1)
+        // 위치 계산 + item 생성 부분은 그대로
         MediaAssetRes storedMedia = mediaAssetService.createMediaAssetFromMultipart(file, req.media(), ContentType.VIDEO);
         Integer position = shortReelItemRepository.findByReel_Id(reel.getId())
                 .stream().map(ShortReelItem::getPosition)
@@ -72,44 +77,50 @@ public class ShortReelService {
                 .max()
                 .orElse(0) + 1;
 
-        //media asset은 따로 서비스 호출해서 저장하고 옴(res 반환하면 거기서 id로 리포에서 찾아서 reel에 연결 저장)
-        ShortReelItem data = shortReelItemRepository.save(ShortReelItem.builder()
-                .reel(reel)
-                .position(position)
-                .holdMs(3)
-                .transition(ReelTransition.NONE)
-                .media(mediaAssetRepository.findById(storedMedia.mediaAssetId()).orElseThrow(() -> new EntityNotFoundException("no media asset")))
-                .build());
+        ShortReelItem data = shortReelItemRepository.save(
+                ShortReelItem.builder()
+                        .reel(reel)
+                        .position(position)
+                        .holdMs(3)
+                        .transition(ReelTransition.NONE)
+                        .media(
+                                mediaAssetRepository.findById(storedMedia.mediaAssetId())
+                                        .orElseThrow(() -> new EntityNotFoundException("no media asset"))
+                        )
+                        .build()
+        );
 
-//        ShortReel data = shortReelRepository.save(ShortReel.builder()
-//                .title(req.title())
-//                .trip(tripRepository.findById(media.tripId()).orElseThrow(() -> new EntityNotFoundException("no trip")))
-//                .creator(userRepository.findById(loggedInUserId).orElseThrow(() -> new EntityNotFoundException("no user")))
-//                .renderStatus(ReelRenderStatus.DONE)
-//                .outputMedia(mediaAssetRepository.findById(storedMedia.mediaAssetId()).orElseThrow(() -> new EntityNotFoundException("no media asset")))
-//                .build()
-//        );
         return new ReelItemRes(data.getId(), req.tripId(), data.getPosition(), storedMedia);
     }
 
     @Transactional
     public ReelStatusRes getOrQueueWhenEnded(Long tripId) throws IOException {
+        Long loggedInUserId = currentUserProvider.getUserId()
+                .orElseThrow(() -> new EntityNotFoundException("User not logged in"));
+
         Trip trip = tripRepository.findById(tripId).orElseThrow();
 
-        Optional<ShortReel> opt = shortReelRepository.findByTrip_Id(tripId);
+        // (trip, creator) 기준으로 현재 유저의 리일만 조회
+        Optional<ShortReel> opt = shortReelRepository
+                .findFirstByTrip_IdAndCreator_IdOrderByCreatedAtDesc(tripId, loggedInUserId);
+
         if (opt.isEmpty()) {
-            // 아직 클립이 한 개도 안 올라온 상태(= reel 자체가 없음)
-            // 화면에는 "클립이 아직 없습니다" 정도만 내려주면 OK
+            // 이 유저는 아직 이 trip에 대해 리일을 만든 적이 없음
+            // → 기존 로직 유지: "클립이 아직 없습니다" 정도를 보여줄 수 있게 NONE 반환
             return new ReelStatusRes("NONE", null, null);
         }
 
         ShortReel reel = opt.get();
 
-        // 여행이 끝났고 아직 결과물이 없다면 → 큐잉
+        // 여행 종료 여부
         boolean ended = trip.getStatus() == TripStatus.COMPLETED
                 || (trip.getEndDate() != null && trip.getEndDate().isBefore(LocalDate.now()));
+
+        // 여행이 끝났고, 아직 결과물이 없는 상태면 → 큐잉
         if (ended && reel.getOutputMedia() == null &&
-                (reel.getRenderStatus() == ReelRenderStatus.COLLECTING || reel.getRenderStatus() == ReelRenderStatus.FAILED)) {
+                (reel.getRenderStatus() == ReelRenderStatus.COLLECTING
+                        || reel.getRenderStatus() == ReelRenderStatus.FAILED)) {
+
             reel.setRenderStatus(ReelRenderStatus.QUEUED);
             shortReelRepository.save(reel);
 
@@ -121,4 +132,5 @@ public class ShortReelService {
         String url = (reel.getOutputMedia() != null) ? reel.getOutputMedia().getUrl() : null;
         return new ReelStatusRes(reel.getRenderStatus().name(), reel.getId(), url);
     }
+
 }
