@@ -267,7 +267,7 @@ public class TripService {
         // 3) 릴: 아예 안 보이는 릴이면 null
 
 
-        ShortReel reel = shortReelRepository.findByTrip_Id(tripId)
+        ShortReel reel = shortReelRepository.findFirstByTrip_IdAndCreator_IdOrderByCreatedAtDesc(tripId, currentUserId)
                 .filter(r -> {
                     boolean mine = currentUserId != null
                             && r.getCreator() != null
@@ -282,7 +282,7 @@ public class TripService {
 
         ReelRes reelRes = (reel == null) ? null : toReelRes(reel);
 
-        ShortReel reel_root = shortReelRepository.findByTrip_Id(tripId).orElse(null);
+        ShortReel reel_root = shortReelRepository.findFirstByTrip_IdAndCreator_IdOrderByCreatedAtDesc(tripId, currentUserId).orElse(null);
 //        logger.info("[INFO] reel_: {}", reel_);
 
         // 4) 릴 아이템: 해당 아이템이 가진 media 기준으로 필터링
