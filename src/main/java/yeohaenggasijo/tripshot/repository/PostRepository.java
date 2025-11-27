@@ -18,6 +18,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostRepositor
                 pm.objectType,
                 CASE pm.objectType 
                     WHEN yeohaenggasijo.tripshot.domain.common.AttachmentType.MEDIA THEN ma.url
+                    WHEN yeohaenggasijo.tripshot.domain.common.AttachmentType.SCRAPBOOK THEN ma.url
                     WHEN yeohaenggasijo.tripshot.domain.common.AttachmentType.SHORT_REEL THEN ma.thumbnailUrl
                     ELSE null
                 END
