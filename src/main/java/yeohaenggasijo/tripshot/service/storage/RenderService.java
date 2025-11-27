@@ -109,8 +109,12 @@ public class RenderService {
             );
             run(concatCmd, work);
 
+            String key = "reels/" + reel.getTrip().getId()
+                    + "/reel_" + reel.getId() + ".mp4";
+
+
             // 4) 업로드 (R2 등) → mediaAssets 레코드 생성 → shortReel.outputMediaId 연결
-            StorageUploader.UploadResult up = storageUploader.upload(out, "video/mp4", "reels/" + reel.getTrip().getId() + "/reel.mp4");
+            StorageUploader.UploadResult up = storageUploader.upload(out, "video/mp4", key);
             MediaAsset output = mediaAssetRepository.save(
                     MediaAsset.builder()
                             .contentType(ContentType.VIDEO)
