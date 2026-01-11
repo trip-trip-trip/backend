@@ -49,12 +49,14 @@ public class R2StorageService {
         this.s3 = S3Client.builder()
                 .httpClientBuilder(UrlConnectionHttpClient.builder())
                 .endpointOverride(URI.create(endpoint))
-                .region(Region.of("auto")) // R2는 무시되지만 필수 파라미터
+                .region(Region.US_EAST_1) // R2는 region을 무시하지만, auto 대신 명시적으로 지정
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)
                 ))
                 .serviceConfiguration(S3Configuration.builder()
                         .pathStyleAccessEnabled(true) // R2는 path-style 권장
+                        .checksumValidationEnabled(false) // R2 호환성: checksum 검증 비활성화
+                        .chunkedEncodingEnabled(false) // R2 호환성: chunked encoding 비활성화
                         .build())
                 .build();
     }
@@ -62,6 +64,8 @@ public class R2StorageService {
     /** Path 기반 업로드 (다른 레이어에서 가장 쓰기 좋음) */
     public StorageUploader.UploadResult upload(Path file, String contentType, String objectKey) {
         try {
+            log.debug("Uploading file to R2: bucket={}, key={}, contentType={}", bucket, objectKey, contentType);
+
             String ct = (contentType != null) ? contentType : guessContentType(file);
             PutObjectRequest req = PutObjectRequest.builder()
                     .bucket(bucket)
@@ -75,9 +79,16 @@ public class R2StorageService {
             long size = Files.size(file);
             String etag = res.eTag();
 
+            log.info("Successfully uploaded to R2: key={}, size={}, etag={}", objectKey, size, etag);
             return new StorageUploader.UploadResult(objectKey, url, etag, size);
+        } catch (software.amazon.awssdk.services.s3.model.S3Exception e) {
+            log.error("R2 S3Exception - Status: {}, Code: {}, Message: {}, RequestId: {}, Bucket: {}, Key: {}",
+                    e.statusCode(), e.awsErrorDetails().errorCode(), e.awsErrorDetails().errorMessage(),
+                    e.requestId(), bucket, objectKey);
+            throw new RuntimeException("R2 upload failed (S3Exception): " + objectKey, e);
         } catch (IOException e) {
-            throw new RuntimeException("R2 upload failed: " + objectKey, e);
+            log.error("R2 IOException while uploading: {}", objectKey, e);
+            throw new RuntimeException("R2 upload failed (IOException): " + objectKey, e);
         }
     }
 
