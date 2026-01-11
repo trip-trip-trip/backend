@@ -40,6 +40,9 @@ logging:
   level:
     root: INFO
     org.springframework.security: INFO
+    software.amazon.awssdk: DEBUG
+    software.amazon.awssdk.request: DEBUG
+    org.apache.http.wire: DEBUG
   file:
     name: /srv/app/tripshot/logs/app.log   # logback-spring.xml 있으면 여긴 무시됨
 

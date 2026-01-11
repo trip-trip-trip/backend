@@ -41,6 +41,16 @@ public class R2StorageService {
         log.info("Public Base URL: {}", publicBaseUrl);
         log.info("Access Key ID: {}", accessKey != null ? accessKey.substring(0, Math.min(8, accessKey.length())) + "***" : "null");
         log.info("Secret Key: {}", secretKey != null ? "***" + secretKey.substring(Math.max(0, secretKey.length() - 4)) : "null");
+
+        // URI 생성 검증
+        try {
+            URI endpointUri = URI.create(endpoint);
+            log.info("Parsed Endpoint URI - Scheme: {}, Host: {}, Port: {}, Path: {}",
+                    endpointUri.getScheme(), endpointUri.getHost(), endpointUri.getPort(), endpointUri.getPath());
+        } catch (Exception e) {
+            log.error("Failed to parse endpoint URI: {}", endpoint, e);
+        }
+
         log.info("=====================================");
 
         this.bucket = bucket;
@@ -59,6 +69,8 @@ public class R2StorageService {
                         .chunkedEncodingEnabled(false) // R2 호환성: chunked encoding 비활성화
                         .build())
                 .build();
+
+        log.info("R2 S3Client successfully created");
     }
 
     /** Path 기반 업로드 (다른 레이어에서 가장 쓰기 좋음) */
@@ -82,9 +94,25 @@ public class R2StorageService {
             log.info("Successfully uploaded to R2: key={}, size={}, etag={}", objectKey, size, etag);
             return new StorageUploader.UploadResult(objectKey, url, etag, size);
         } catch (software.amazon.awssdk.services.s3.model.S3Exception e) {
-            log.error("R2 S3Exception - Status: {}, Code: {}, Message: {}, RequestId: {}, Bucket: {}, Key: {}",
-                    e.statusCode(), e.awsErrorDetails().errorCode(), e.awsErrorDetails().errorMessage(),
-                    e.requestId(), bucket, objectKey);
+            log.error("R2 S3Exception Details:");
+            log.error("  Status Code: {}", e.statusCode());
+            log.error("  Request ID: {}", e.requestId());
+            log.error("  Extended Request ID: {}", e.extendedRequestId());
+            log.error("  Bucket: {}", bucket);
+            log.error("  Key: {}", objectKey);
+
+            if (e.awsErrorDetails() != null) {
+                log.error("  Error Code: {}", e.awsErrorDetails().errorCode());
+                log.error("  Error Message: {}", e.awsErrorDetails().errorMessage());
+                log.error("  Service Name: {}", e.awsErrorDetails().serviceName());
+                log.error("  SDK HTTP Response: {}", e.awsErrorDetails().sdkHttpResponse());
+            } else {
+                log.error("  AWS Error Details: null");
+            }
+
+            log.error("  Exception Message: {}", e.getMessage());
+            log.error("  Full Stack Trace:", e);
+
             throw new RuntimeException("R2 upload failed (S3Exception): " + objectKey, e);
         } catch (IOException e) {
             log.error("R2 IOException while uploading: {}", objectKey, e);
