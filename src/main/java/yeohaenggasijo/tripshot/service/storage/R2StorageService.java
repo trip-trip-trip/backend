@@ -2,6 +2,7 @@
 package yeohaenggasijo.tripshot.service.storage;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -18,6 +19,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+@Slf4j
 @Service
 public class R2StorageService {
 
@@ -32,6 +34,15 @@ public class R2StorageService {
             @Value("${r2.bucket}") String bucket,
             @Value("${r2.public-base-url}") String publicBaseUrl      // 위 설명 참고
     ) {
+        // R2 설정 디버깅 로그
+        log.info("=== R2StorageService Configuration ===");
+        log.info("Endpoint: {}", endpoint);
+        log.info("Bucket: {}", bucket);
+        log.info("Public Base URL: {}", publicBaseUrl);
+        log.info("Access Key ID: {}", accessKey != null ? accessKey.substring(0, Math.min(8, accessKey.length())) + "***" : "null");
+        log.info("Secret Key: {}", secretKey != null ? "***" + secretKey.substring(Math.max(0, secretKey.length() - 4)) : "null");
+        log.info("=====================================");
+
         this.bucket = bucket;
         this.publicBaseUrl = trimTrailingSlash(publicBaseUrl);
 
